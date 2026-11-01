@@ -1,3 +1,4 @@
+import SalesChart from '../../components/SalesChart.jsx';
 import {useState,useEffect} from 'react';
 export default function AdminDashboard(){
   const [now,setNow]=useState(new Date());const [dark,setDark]=useState(false);
@@ -7,7 +8,7 @@ export default function AdminDashboard(){
     <h2>👑 Admin Dashboard</h2>
     <p>{String(now.getDate()).padStart(2,'0')}.{String(now.getMonth()+1).padStart(2,'0')}.{now.getFullYear()} | {now.toLocaleTimeString()} <button onClick={()=>setDark(!dark)}>{dark?'☀️':'🌙'}</button></p>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12}}>
-      {[['📦 Products',456],['🛍️ Orders',128],['👥 Users',890],['💰 Revenue','₹2.4L']].map((c,i)=><div key={i} style={{background:card,padding:20,borderRadius:10}}><small>{c[0]}</small><h2>{c[1]}</h2><small style={{color:'green'}}>✓ Updated successfully</small></div>)}
-    </div>
-  </div>);
+      {[['📦 Products',456],['🛍️ Orders',128],['👥 Users',890],['💰 Revenue','₹2.4L']].map((c,i)=><div key={i} style={{background:card,padding:20,borderRadius:10}}><small>{c[0]}</small><h2>{c[1]}</h2><small style={{color:'green'}}>✓ Updated successfully</small><SalesChart/></div>)}
+    <SalesChart/></div>
+  <SalesChart/></div>);
 }
