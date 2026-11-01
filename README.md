@@ -1,13 +1,13 @@
 # Enterprise AI-Powered SmartGadget + Lifestyle MegaStore Command Center
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
-![MongoDB](https://img.shields.io/badge/database-MongoDB_Atlas-47A248.svg)
-![Frontend](https://img.shields.io/badge/frontend-React_18_(Vite)-61DAFB.svg)
-![Backend](https://img.shields.io/badge/backend-Express.js-000000.svg)
-![Deploy Frontend](https://img.shields.io/badge/deploy-Vercel-000000.svg)
-![Deploy Backend](https://img.shields.io/badge/deploy-Render-46E3B7.svg)
+[Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+[License](https://img.shields.io/badge/license-MIT-green.svg)
+[Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
+[MongoDB](https://img.shields.io/badge/database-MongoDB_Atlas-47A248.svg)
+[Frontend](https://img.shields.io/badge/frontend-React_18_(Vite)-61DAFB.svg)
+[Backend](https://img.shields.io/badge/backend-Express.js-000000.svg)
+[Deploy Frontend](https://img.shields.io/badge/deploy-Vercel-000000.svg)
+[Deploy Backend](https://img.shields.io/badge/deploy-Render-46E3B7.svg)
 
 > A production-grade, full-stack MERN e-commerce platform with role-based access control, AI-assisted shopping features, real email OTP authentication, online payments, and live cloud deployment.
 
