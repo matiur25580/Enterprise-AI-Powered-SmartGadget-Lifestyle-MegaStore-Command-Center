@@ -11,6 +11,7 @@ import HRShowcase from './pages/hr/HRShowcase.jsx';
 import SupportChat from './components/SupportChat.jsx';import NotifyCenter from './components/NotifyCenter.jsx';import OfferZone from './components/OfferZone.jsx';import DeliveryTrack from './components/DeliveryTrack.jsx';
 import {StoreProvider,useStore} from './context/StoreContext.jsx';import {useThemeDate} from './pages/auth/AuthLayout.jsx';
 import SpinWheel from './components/SpinWheel.jsx';import Referral from './components/Referral.jsx';
+import HomeProducts from './components/HomeProducts.jsx';
 function Nav(){
   const {cart,wish}=useStore();const {date,time}=useThemeDate();
   return (<><OfferZone/><nav style={{display:'flex',gap:10,padding:'10px 20px',background:'#212122',color:'#fff',fontSize:13,flexWrap:'wrap',alignItems:'center'}}>
@@ -28,6 +29,7 @@ function Landing(){
     <OfferZone/><h1 style={{fontSize:50,marginTop:20}}>🛒 MegaStore Enterprise</h1><p>⭐ 4.8/5 | 🔥 Sale Live | 🚚 Free Delivery</p>
     <div style={{marginTop:20}}><Link to="/shop" style={{background:'#00e676',color:'#000',padding:'12px 26px',borderRadius:20,margin:5,textDecoration:'none',fontWeight:'bold'}}>Shop Now 🛍️</Link>
     <Link to="/for-hr" style={{background:'#212122',color:'#58a6ff',border:'1px solid #353839',padding:'12px 26px',borderRadius:20,margin:5,textDecoration:'none',fontWeight:'bold'}}>👨‍💻 For HR</Link><div style={{maxWidth:720,margin:"18px auto"}}><SpinWheel/><Referral/></div></div>
+      <HomeProducts />
     <div style={{marginTop:20}}><DeliveryTrack status="Shipped"/></div>
   </div>);
 }
