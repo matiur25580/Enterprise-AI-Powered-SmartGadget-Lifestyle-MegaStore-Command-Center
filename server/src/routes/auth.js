@@ -1,0 +1,29 @@
+const express=require('express');const bcrypt=require('bcryptjs');const jwt=require('jsonwebtoken');
+const User=require('../models/User');const Otp=require('../models/Otp');const sendEmail=require('../utils/sendEmail');
+const router=express.Router();
+function genUID(role,fullName,dob){
+  const parts=fullName.trim().split(/\s+/);
+  const X=role[0].toUpperCase();const Y=(parts[0]?.[0]||'X').toUpperCase();const Z=(parts[1]?.[0]||parts[0]?.[0]||'X').toUpperCase();
+  return `${X}${Y}${Z}${dob}`;
+}
+router.post('/send-otp',async(req,res)=>{
+  try{const{email,role}=req.body;const otp=Math.floor(100000+Math.random()*900000).toString();
+  await Otp.deleteMany({email,role});await Otp.create({email,role,otp});
+  await sendEmail(email,otp);res.json({success:true,message:'OTP sent successfully'});}catch(e){res.status(500).json({success:false,message:e.message})}
+});
+router.post('/register',async(req,res)=>{
+  try{const{fullName,email,contact,dob,password,role,otp}=req.body;
+  const rec=await Otp.findOne({email,role,otp});if(!rec) return res.status(400).json({success:false,message:'Invalid OTP'});
+  const exists=await User.findOne({email,role});if(exists) return res.status(400).json({success:false,message:'Email already registered for this role'});
+  const hash=await bcrypt.hash(password,10);const uniqueId=genUID(role,fullName,dob);
+  const u=await User.create({fullName,email,contact,dob,password:hash,role,uniqueId});
+  await Otp.deleteMany({email,role});res.json({success:true,message:'Registration successful',uniqueId:u.uniqueId,role:u.role,fullName:u.fullName});}catch(e){res.status(500).json({success:false,message:e.message})}
+});
+router.post('/login',async(req,res)=>{
+  try{const{emailOrId,password,role}=req.body;
+  const u=await User.findOne({$or:[{email:emailOrId},{uniqueId:emailOrId}],role});if(!u) return res.status(400).json({success:false,message:'Invalid credentials'});
+  const ok=await bcrypt.compare(password,u.password);if(!ok) return res.status(400).json({success:false,message:'Invalid credentials'});
+  const token=jwt.sign({id:u._id,role:u.role},process.env.JWT_SECRET,{expiresIn:'7d'});
+  res.json({success:true,message:'Login successful',token,role:u.role,uniqueId:u.uniqueId,fullName:u.fullName});}catch(e){res.status(500).json({success:false,message:e.message})}
+});
+module.exports=router;
