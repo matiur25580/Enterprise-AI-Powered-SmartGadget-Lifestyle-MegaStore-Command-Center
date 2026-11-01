@@ -6,12 +6,12 @@ export default function OfferZone(){
   const [coupon,setCoupon]=useState('');const [applied,setApplied]=useState(null);
   const apply=()=>{const c={MEGA10:10,DIWALI20:20,NEWUSER15:15};if(c[coupon.toUpperCase()]){setApplied({code:coupon.toUpperCase(),off:c[coupon.toUpperCase()]});alert('Coupon applied: '+coupon.toUpperCase()+' - '+c[coupon.toUpperCase()]+'% OFF')}else alert('Invalid coupon')};
   return (<div style={{fontFamily:'sans-serif'}}>
-    <div style={{background:'linear-gradient(90deg,#3d1119,#6e1e28)',color:'#e6edf3',padding:12,textAlign:'center',fontWeight:'bold',borderBottom:'1px solid #30363d'}}>
+    <div style={{background:'linear-gradient(90deg,#2B1B17,#3B3131)',color:'#e6edf3',padding:12,textAlign:'center',fontWeight:'bold',borderBottom:'1px solid #353839'}}>
       MEGA SALE ends in {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')} | Extra 10% off on 3+ items | Free delivery over Rs.499
     </div>
-    <div style={{display:'flex',gap:10,padding:12,background:'#161b22',color:'#e6edf3',alignItems:'center',flexWrap:'wrap',justifyContent:'center',borderBottom:'1px solid #30363d'}}>
+    <div style={{display:'flex',gap:10,padding:12,background:'#212122',color:'#e6edf3',alignItems:'center',flexWrap:'wrap',justifyContent:'center',borderBottom:'1px solid #353839'}}>
       <b>Have coupon?</b>
-      <input value={coupon} onChange={e=>setCoupon(e.target.value)} placeholder="MEGA10 / DIWALI20" style={{padding:8,borderRadius:8,border:'1px solid #30363d',background:'#0d1117',color:'#e6edf3'}}/>
+      <input value={coupon} onChange={e=>setCoupon(e.target.value)} placeholder="MEGA10 / DIWALI20" style={{padding:8,borderRadius:8,border:'1px solid #353839',background:'#060606',color:'#e6edf3'}}/>
       <button onClick={apply} style={{padding:'8px 14px',background:'#1f6feb',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold'}}>Apply</button>
       {applied&&<span style={{background:'#0d2b1f',color:'#3fb950',padding:'6px 12px',borderRadius:12,fontSize:13,border:'1px solid #238636'}}>{applied.code}: {applied.off}% OFF applied</span>}
       <span style={{fontSize:12,opacity:.7}}>Buy 3+ get extra 5% | Buy 5+ get extra 10% auto</span>

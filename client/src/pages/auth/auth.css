@@ -1,17 +1,17 @@
 @import '../../theme.css';
-.auth-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20;background:#0d1117}
-.auth-card{background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:32px;border-radius:12px;width:400px;max-width:100%;box-shadow:0 8px 30px rgba(0,0,0,.5)}
-.auth-card.dark{background:#161b22;color:#e6edf3}
-.auth-input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #30363d;box-sizing:border-box;font-size:14px;background:#0d1117;color:#e6edf3}
+.auth-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20;background:#060606}
+.auth-card{background:#212122;border:1px solid #353839;color:#e6edf3;padding:32px;border-radius:12px;width:400px;max-width:100%;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.auth-card.dark{background:#212122;color:#e6edf3}
+.auth-input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #353839;box-sizing:border-box;font-size:14px;background:#060606;color:#e6edf3}
 .auth-input:focus{border-color:#58a6ff;outline:none}
 .auth-btn{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;font-weight:bold;font-size:15px;cursor:pointer}
 .auth-btn-primary{background:#1f6feb;color:#fff}
 .auth-btn-primary:hover{background:#388bfd}
 .step-dots{display:flex;justify-content:center;gap:8;margin:12px 0}
-.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;background:#30363d;color:#8b949e}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;background:#353839;color:#8b949e}
 .step-dot.active{background:#1f6feb;color:#fff}
 .step-dot.done{background:#238636;color:#fff}
 @media(max-width:480px){.auth-card{padding:20px}}
-.dash-card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px;color:#e6edf3;transition:transform .2s,box-shadow .2s}
+.dash-card{background:#212122;border:1px solid #353839;border-radius:12px;padding:16px;color:#e6edf3;transition:transform .2s,box-shadow .2s}
 .dash-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
-.dash-card.dark{background:#161b22;color:#e6edf3}
+.dash-card.dark{background:#212122;color:#e6edf3}
