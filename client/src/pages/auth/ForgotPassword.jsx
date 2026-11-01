@@ -1,8 +1,8 @@
 import {useState} from 'react';import {Link} from 'react-router-dom';import axios from 'axios';import './auth.css';
 export default function ForgotPassword(){
   const [dark,setDark]=useState(false);const [step,setStep]=useState(1);const [f,setF]=useState({email:'',role:'',otp:'',newPassword:''});
-  const send=async(e)=>{e.preventDefault();try{await axios.post('http://localhost:10000/api/auth/forgot-password',{email:f.email,role:f.role});setStep(2);alert('✓ Reset OTP sent successfully');}catch(err){alert('✕ '+(err.response?.data?.message||'Failed'))}};
-  const reset=async(e)=>{e.preventDefault();try{const r=await axios.post('http://localhost:10000/api/auth/reset-password',f);alert('✓ '+r.data.message);setStep(3);}catch(err){alert('✕ '+(err.response?.data?.message||'Failed'))}};
+  const send=async(e)=>{e.preventDefault();try{await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/forgot-password',{email:f.email,role:f.role});setStep(2);alert('✓ Reset OTP sent successfully');}catch(err){alert('✕ '+(err.response?.data?.message||'Failed'))}};
+  const reset=async(e)=>{e.preventDefault();try{const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/reset-password',f);alert('✓ '+r.data.message);setStep(3);}catch(err){alert('✕ '+(err.response?.data?.message||'Failed'))}};
   return (<div className="auth-bg"><div className={'auth-card'+(dark?' dark':'')}>
     <div style={{display:'flex',justifyContent:'space-between'}}><h2>🔑 Forgot Password</h2><button onClick={()=>setDark(!dark)} style={{padding:'6px 12px',borderRadius:15,border:'none'}}>{dark?'☀️':'🌙'}</button></div>
     <div className="step-dots"><div className={'step-dot '+(step>=1?'done':'')}>1</div><div className={'step-dot '+(step===2?'active':step>2?'done':'')}>2</div><div className={'step-dot '+(step===3?'done':'')}>✓</div></div>

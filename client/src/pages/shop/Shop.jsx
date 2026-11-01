@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';import axios from 'axios';
 import FlashSale from '../../components/FlashSale.jsx';import PincodeEMI from '../../components/PincodeEMI.jsx';
-const PAPI='http://localhost:10000/api/product';
+const PAPI='https://enterprise-ai-powered-smartgadget.onrender.com/api/product';
 export default function Shop(){
   const [products,setProducts]=useState([]);const [cart,setCart]=useState([]);
   const [recent,setRecent]=useState(()=>JSON.parse(localStorage.getItem('recent')||'[]'));

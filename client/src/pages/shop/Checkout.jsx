@@ -4,7 +4,7 @@ export default function Checkout(){
   const submit=async(e)=>{
     e.preventDefault();
     try{
-      await axios.post('http://localhost:10000/api/order/create',{
+      await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/order/create',{
         customerEmail:email, address, total:999, items:[], status:'Pending'
       });
       alert('Order placed successfully! 🎉 Track in /orders');

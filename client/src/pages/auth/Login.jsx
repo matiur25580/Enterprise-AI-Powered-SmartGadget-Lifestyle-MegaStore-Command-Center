@@ -7,7 +7,7 @@ export default function Login(){
   const dd=String(now.getDate()).padStart(2,'0'),mm=String(now.getMonth()+1).padStart(2,'0'),h12=now.getHours()%12||12,ap=now.getHours()>=12?'PM':'AM';
   const date=`${dd}.${mm}.${now.getFullYear()}`,time=`${String(h12).padStart(2,'0')}.${String(now.getMinutes()).padStart(2,'0')}.${String(now.getSeconds()).padStart(2,'0')} ${ap}`;
   const submit=async(e)=>{e.preventDefault();if(!f.role) return alert('✕ Please select your role');
-    try{const r=await axios.post('http://localhost:10000/api/auth/login',f);alert('✓ '+r.data.message);nav('/shop');}catch(err){alert('✕ '+(err.response?.data?.message||'Login failed'))}};
+    try{const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/login',f);alert('✓ '+r.data.message);nav('/shop');}catch(err){alert('✕ '+(err.response?.data?.message||'Login failed'))}};
   return (<div className="auth-bg"><form onSubmit={submit} className={'auth-card'+(dark?' dark':'')}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><h2>🛒 MegaStore</h2><button type="button" onClick={()=>setDark(!dark)} style={{padding:'6px 12px',borderRadius:15,border:'none'}}>{dark?'☀️':'🌙'}</button></div>
     <div style={{fontSize:12,opacity:.6,textAlign:'center'}}>{date} | {time}</div>

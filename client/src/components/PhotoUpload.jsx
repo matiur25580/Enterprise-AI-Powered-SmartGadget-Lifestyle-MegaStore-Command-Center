@@ -6,7 +6,7 @@ export default function PhotoUpload({onUpload}){
     setPreview(URL.createObjectURL(file));setLoading(true);
     try{
       const fd=new FormData();fd.append('photo',file);
-      const r=await axios.post('http://localhost:10000/api/upload/product-photo',fd);
+      const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/upload/product-photo',fd);
       alert('Photo uploaded successfully');onUpload&&onUpload(r.data.url);
     }catch{alert('Upload failed - using preview only');onUpload&&onUpload(preview)}
     setLoading(false);
