@@ -4,6 +4,7 @@ import ShopWrapper from './pages/shop/ShopWrapper.jsx';import Checkout from './p
 import Wishlist from './pages/shop/Wishlist.jsx';import Orders from './pages/shop/Orders.jsx';import AddressBook from './pages/shop/AddressBook.jsx';
 import Terms from './pages/shop/Terms.jsx';import Settings from './pages/shop/Settings.jsx';
 import SellerDashboard from './pages/seller/SellerDashboard.jsx';import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import ProductDetail from './pages/shop/ProductDetail.jsx';
 import HRShowcase from './pages/hr/HRShowcase.jsx';
 import SupportChat from './components/SupportChat.jsx';import NotifyCenter from './components/NotifyCenter.jsx';import OfferZone from './components/OfferZone.jsx';import DeliveryTrack from './components/DeliveryTrack.jsx';
 import {StoreProvider,useStore} from './context/StoreContext.jsx';import {useThemeDate} from './pages/auth/AuthLayout.jsx';
@@ -33,7 +34,7 @@ export default function App(){return (<StoreProvider><BrowserRouter><Nav/>
 <Route path="/wishlist" element={<Wishlist/>}/><Route path="/orders" element={<Orders/>}/><Route path="/addresses" element={<AddressBook/>}/>
 <Route path="/terms" element={<Terms/>}/><Route path="/settings" element={<Settings/>}/>
 <Route path="/seller" element={<SellerDashboard/>}/><Route path="/admin" element={<AdminDashboard/>}/>
-<Route path="/for-hr" element={<HRShowcase/>}/>
+<Route path="/product/:id" element={<ProductDetail/>}/><Route path="/for-hr" element={<HRShowcase/>}/>
 <Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/>
 </Routes><SupportChat/></BrowserRouter></StoreProvider>);
 }
