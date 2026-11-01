@@ -1,17 +1,17 @@
-.auth-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20;background:linear-gradient(135deg,#1a237e,#2a5298,#3949ab)}
-.auth-card{background:#fff;color:#000;padding:32px;border-radius:16px;width:400px;max-width:100%;box-shadow:0 8px 30px rgba(0,0,0,.25)}
-.auth-card.dark{background:#1e1e1e;color:#fff}
-.auth-input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1.5px solid #ddd;box-sizing:border-box;font-size:14px}
-.auth-card.dark .auth-input{background:#2a2a2a;color:#fff;border-color:#444}
-.auth-input:focus{border-color:#2a5298;outline:none}
+@import '../../theme.css';
+.auth-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20;background:#0d1117}
+.auth-card{background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:32px;border-radius:12px;width:400px;max-width:100%;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.auth-card.dark{background:#161b22;color:#e6edf3}
+.auth-input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #30363d;box-sizing:border-box;font-size:14px;background:#0d1117;color:#e6edf3}
+.auth-input:focus{border-color:#58a6ff;outline:none}
 .auth-btn{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;font-weight:bold;font-size:15px;cursor:pointer}
-.auth-btn-primary{background:#2a5298;color:#fff}
-.auth-btn-primary:hover{background:#1a237e}
+.auth-btn-primary{background:#1f6feb;color:#fff}
+.auth-btn-primary:hover{background:#388bfd}
 .step-dots{display:flex;justify-content:center;gap:8;margin:12px 0}
-.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;background:#e0e0e0;color:#666}
-.step-dot.active{background:#2a5298;color:#fff}
-.step-dot.done{background:#00c853;color:#fff}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;background:#30363d;color:#8b949e}
+.step-dot.active{background:#1f6feb;color:#fff}
+.step-dot.done{background:#238636;color:#fff}
 @media(max-width:480px){.auth-card{padding:20px}}
-.dash-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform .2s,box-shadow .2s}
-.dash-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
-.dash-card.dark{background:#1e1e1e;color:#fff}
+.dash-card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px;color:#e6edf3;transition:transform .2s,box-shadow .2s}
+.dash-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.dash-card.dark{background:#161b22;color:#e6edf3}
