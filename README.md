@@ -27,9 +27,11 @@
 
 | Service | Link |
 |---|---|
-| 🌐 Frontend (Vercel) | `https://your-app.vercel.app` ← *tomar Vercel URL bosao* |
+| 🌐 Frontend (Vercel) | `https://your-app.vercel.app` |
 | 🖥️ Backend API (Render) | `https://enterprise-ai-powered-smartgadget.onrender.com` |
-| 👨‍💻 HR Showcase Page | `https://your-app.vercel.app/for-hr` ← *tomar Vercel URL bosao* |
+| 👨‍💻 HR Showcase Page | `https://your-app.vercel.app/for-hr` |
+
+> ✏️ `https://your-app.vercel.app` er jaygay tomar asol Vercel URL bosao (2 jaygay)
 
 ---
 
@@ -89,20 +91,19 @@
 - Pure dark theme — SABLE `#060606`, INK BLACK `#212122`, SLATE `#26282A`, ONYX `#353839`
 - Fully responsive: mobile, tablet, desktop
 - Theme toggle, success toast on every action, current date/time on dashboards
-
----
+- ---
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18 (Vite), React Router DOM, 【entity-Axios¦canonical_name=Axios】 |
+| Frontend | React 18 (Vite), React Router DOM, Axios |
 | Backend | Node.js, Express.js, Multer (file uploads) |
 | Database | MongoDB Atlas (Mongoose ODM) |
 | Auth | JWT, Nodemailer (Gmail App Password), 6-digit OTP |
-| Payments | 【entity-Razorpay¦canonical_name=Razorpay】 |
+| Payments | Razorpay |
 | Hosting | Vercel (frontend), Render (backend) |
-| Tools | Git, 【entity-GitHub¦canonical_name=GitHub】, Termux (developed fully on Android) |
+| Tools | Git, GitHub, Termux (developed fully on Android) |
 
 ---
 
@@ -119,4 +120,41 @@
 **1. Clone the repo**
 ```bash
 git clone https://github.[STRIPPED 84 bytes].git
-cd [STRIPPED 68 bytes]
+
+---
+
+## 📸 Screenshots
+
+> Add screenshots of your live site here — landing page, product detail, seller dashboard, `/for-hr` page.
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Razorpay **live** keys after KYC
+- [ ] Real product photos via seller upload (infra ready)
+- [ ] Push notifications via service worker
+- [ ] Multi-language (Bengali / Hindi / English)
+- [ ] Admin analytics dashboard with charts
+
+---
+
+## 👤 Author
+
+**Rubel Ali** — MERN Full Stack Developer, Kolkata, India
+
+- 【entity-GitHub¦canonical_name=GitHub】: [@matiur25580](https://github.com/matiur25580)
+- Email: `rahamanmatiur397@gmail.com`
+- Languages: Bengali, Hindi, English
+- Focus: building real, production-grade full-stack apps — this entire project was developed on an Android phone via Termux + GitHub Codespaces.
+
+---
+
+## 📄 License
+
+This project is open source under the [MIT License](LICENSE).
+
+---
+
+<p align="center">Built with ❤️ using MongoDB, Express, React & Node.js</p>
+
