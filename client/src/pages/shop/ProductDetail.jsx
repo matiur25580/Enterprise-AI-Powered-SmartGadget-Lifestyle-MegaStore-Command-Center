@@ -1,5 +1,7 @@
 import {useState} from 'react';import {useParams,Link} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';
 import Product3D from '../../components/Product3D.jsx';
+import Compare from '../../components/Compare.jsx';
+import PriceAlert from '../../components/PriceAlert.jsx';
 import ReviewQA from '../../components/ReviewQA.jsx';import DeliveryTrack from '../../components/DeliveryTrack.jsx';
 // 6 alada design er product slides - prottekta product related
 const SLIDES=[
@@ -87,6 +89,6 @@ export default function ProductDetail(){
     <div style={{display:'flex',gap:10,overflowX:'auto'}}>
       {['Galaxy S24 ₹49999','Pixel 8 ₹59999','OnePlus 12 ₹64999','iPhone 14 ₹59999'].map((n,i)=><div key={i} style={{minWidth:150,border:'1px solid #eee',borderRadius:10,padding:10,textAlign:'center'}}><div style={{fontSize:36}}>📱</div><small>{n}</small></div>)}
     </div>
-    <Product3D/><ReviewQA/>
+    <Product3D/><PriceAlert/><Compare/><ReviewQA/>
   </div>);
 }
