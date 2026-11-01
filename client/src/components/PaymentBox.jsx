@@ -20,7 +20,7 @@ export default function PaymentBox({total=5000,productName='iPhone 15'}){
     {!isEMIEligible&&<div style={{fontSize:12,background:'#fff3e0',padding:8,borderRadius:6}}>ℹ️ EMI sudhu ₹15,000+ product e (iPhone, Laptop etc)</div>}
     {m==='EMI'&&isEMIEligible&&<div style={{background:'#fff3e0',padding:12,borderRadius:8,marginTop:8}}>
       <b>📅 EMI Plan (real life er moto 8% interest)</b>
-      <div style={{marginTop:6}}><label>Months: </label><select value={months} onChange={e=>setMonths(+e.target.value)} style={{padding:6,borderRadius:6}}><option value={6}>6 mo</option><option value={12}>12 mo</option><option value={24}>24 mo</option></select></div>
+      <div style={{marginTop:6}}><label>Months: </label><select value={months} onChange={e=>setMonths(+e.target.value)} style={{padding:6,borderRadius:6}}><option value={3}>3 months</option><option value={6}>6 months</option><option value={9}>9 months</option><option value={12}>1 year</option><option value={24}>2 years (max)</option></select></div>
       <div style={{marginTop:8,fontSize:14}}>
         Product: ₹{total.toLocaleString('en-IN')}<br/>
         Interest (8%): +₹{extra.toLocaleString('en-IN')}<br/>
