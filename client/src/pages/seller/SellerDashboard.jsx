@@ -1,4 +1,5 @@
 import {useState} from 'react';import {Link} from 'react-router-dom';
+import SellerChat from '../../components/SellerChat.jsx';import StockAlert from '../../components/StockAlert.jsx';
 const init=[{_id:'1',name:'iPhone 15',price:66999,stock:3},{_id:'2',name:'Galaxy A55',price:39999,stock:25},{_id:'3',name:'AirPods Pro',price:19999,stock:4}];
 export default function SellerDashboard(){
   const [prods,setProds]=useState(init);const [edit,setEdit]=useState(null);
@@ -23,5 +24,5 @@ export default function SellerDashboard(){
         <div style={{display:'flex',gap:8}}><button onClick={save} style={{flex:1,padding:10,background:'#00c853',color:'#fff',border:'none',borderRadius:6}}>Save ✓</button><button onClick={()=>setEdit(null)} style={{flex:1,padding:10,background:'#ccc',border:'none',borderRadius:6}}>Cancel</button></div>
       </div>
     </div>}
-  </div>);
+  <SellerChat/><StockAlert/></div>);
 }

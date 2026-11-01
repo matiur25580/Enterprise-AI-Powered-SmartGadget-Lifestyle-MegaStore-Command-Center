@@ -1,3 +1,4 @@
+import HrExtra from '../../components/HrExtra.jsx';
 import {Link} from 'react-router-dom';
 export default function HRShowcase(){
   const s={fontFamily:'sans-serif',padding:30,maxWidth:1000,margin:'0 auto',background:'#fff',minHeight:'100vh'};
@@ -50,7 +51,7 @@ MongoDB Atlas (Indexed: email+role, product tags)`}
       <h3>🎯 Interview Q&A - Why I Built This</h3>
       <p><b>Q: Why comboTags?</b><br/>A: Real e-commerce e cross-selling 30% revenue baray. Ami 【entity-MongoDB¦canonical_name=MongoDB】 array matching diye O(n) te perfect combo ber kori.</p>
       <p><b>Q: How scale to 1M users?</b><br/>A: Indexes on email+role, pagination (limit 20), Redis caching ready, stateless JWT for horizontal scaling.</p>
-      <p><b>Q: Hardest bug?</b><br/>A: Same email multi-role login conflict - compound unique index (email+role) diye solve korechi.</p>
+      <p><b>Q: Hardest bug?</b><br/>A: Same email multi-role login conflict - compound unique index (email+role) diye solve korechi.</p><HrExtra/>
     </div>
 
     <div style={{textAlign:'center',marginTop:20}}>

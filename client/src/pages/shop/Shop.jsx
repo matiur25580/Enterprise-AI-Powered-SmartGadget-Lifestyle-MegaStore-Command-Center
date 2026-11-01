@@ -1,7 +1,8 @@
+import {useLocation} from 'react-router-dom';
 import {useEffect,useState} from 'react';import axios from 'axios';
 import FlashSale from '../../components/FlashSale.jsx';import PincodeEMI from '../../components/PincodeEMI.jsx';
 const PAPI='https://enterprise-ai-powered-smartgadget.onrender.com/api/product';
-export default function Shop(){
+export default function Shop(){const __loc=useLocation();useEffect(()=>{try{const s=new URLSearchParams(__loc.search).get('search');if(s){setQ(function(pr){return Object.assign({},pr,{search:s});});}}catch(e){}},[__loc.search]);/*mega_voice_wired*/
   const [products,setProducts]=useState([]);const [cart,setCart]=useState([]);
   const [recent,setRecent]=useState(()=>JSON.parse(localStorage.getItem('recent')||'[]'));
   const [q,setQ]=useState({search:'',category:'all',page:1});

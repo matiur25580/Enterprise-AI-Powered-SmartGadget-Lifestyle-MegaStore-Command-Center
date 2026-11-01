@@ -3,6 +3,7 @@ import Product3D from '../../components/Product3D.jsx';
 import Compare from '../../components/Compare.jsx';
 import PriceAlert from '../../components/PriceAlert.jsx';
 import ReviewQA from '../../components/ReviewQA.jsx';import DeliveryTrack from '../../components/DeliveryTrack.jsx';
+import HaggleBot from '../../components/HaggleBot.jsx';import FlashDeal from '../../components/FlashDeal.jsx';import VideoUpload from '../../components/VideoUpload.jsx';
 // 6 alada design er product slides - prottekta product related
 const SLIDES=[
  {bg:'linear-gradient(135deg,#0f2027,#203a43,#2c5364)',icon:'📱',title:'iPhone 15 - Front View',desc:'6.1" Super Retina XDR display, Dynamic Island',tag:'DISPLAY'},
@@ -90,5 +91,5 @@ export default function ProductDetail(){
       {['Galaxy S24 ₹49999','Pixel 8 ₹59999','OnePlus 12 ₹64999','iPhone 14 ₹59999'].map((n,i)=><div key={i} style={{minWidth:150,border:'1px solid #eee',borderRadius:10,padding:10,textAlign:'center'}}><div style={{fontSize:36}}>📱</div><small>{n}</small></div>)}
     </div>
     <Product3D/><PriceAlert/><Compare/><ReviewQA/>
-  </div>);
+  <HaggleBot/><FlashDeal hours={6}/><VideoUpload/></div>);
 }

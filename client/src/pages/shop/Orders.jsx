@@ -1,9 +1,10 @@
 import {Link} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';import {useState} from 'react';
+import LiveMap from '../../components/LiveMap.jsx';import GstInvoice from '../../components/GstInvoice.jsx';
 export default function Orders(){
   const {orders,returnOrder,setOrders}=useStore();const [reason,setReason]=useState({});
   const cancel=(id)=>{if(confirm('Order cancel korte chao?')){setOrders(orders.map(x=>x.id===id?{...x,status:'Cancelled ✓ Refund in 3-5 days'}:x));alert('✓ Order cancelled successfully. Refund initiated.')}};
   return (<div style={{padding:20,maxWidth:900,margin:'0 auto',fontFamily:'sans-serif'}}>
-    <Link to="/shop">← Shop</Link><h2>📦 Order History ({orders.length})</h2>
+    <Link to="/shop">← Shop</Link><h2>📦 Order History ({orders.length})</h2><LiveMap/><GstInvoice/>
     {orders.length===0?<p style={{textAlign:'center',padding:40}}>No orders yet. <Link to="/shop">Start shopping</Link></p>:
     orders.map(o=><div key={o.id} style={{border:'1px solid #ddd',borderRadius:10,padding:15,margin:'12px 0'}}>
       <div style={{display:'flex',justifyContent:'space-between'}}><b>#{o.id}</b><span style={{background:o.status.includes('Cancel')?'#ffebee':o.status.includes('Return')?'#fff3e0':'#e8f5e9',padding:'4px 10px',borderRadius:12,fontSize:12}}>{o.status}</span></div>

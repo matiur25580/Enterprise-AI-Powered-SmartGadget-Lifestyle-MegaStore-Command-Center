@@ -1,12 +1,13 @@
 import Shop from './Shop.jsx';import Loyalty from '../../components/Loyalty.jsx';import SupportChat from '../../components/SupportChat.jsx';
 import AISearch from '../../components/AISearch.jsx';import PaymentBox from '../../components/PaymentBox.jsx';import ReviewQA from '../../components/ReviewQA.jsx';import WalletTier from '../../components/WalletTier.jsx';import CategoryGrid from '../../components/CategoryGrid.jsx';
+import VisualSearch from '../../components/VisualSearch.jsx';import VoiceSearch from '../../components/VoiceSearch.jsx';
 export default function ShopWrapper(){
   return (<div style={{maxWidth:1100,margin:'0 auto'}}>
     <AISearch/>
     <WalletTier/>
     <CategoryGrid/>
     <Loyalty/>
-    <Shop/>
+    <VisualSearch/><VoiceSearch/><Shop/>
     <div style={{padding:'0 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
       <PaymentBox total={8999}/>
       <ReviewQA/>
