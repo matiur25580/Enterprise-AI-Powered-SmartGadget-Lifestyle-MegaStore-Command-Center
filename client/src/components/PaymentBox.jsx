@@ -10,6 +10,7 @@ export default function PaymentBox({total=5000,productName='iPhone 15'}){
   const emiPer=Math.round(emiTotal/months);
   const extra=emiTotal-total;
   const methods=isEMIEligible?['UPI','Card','EMI','COD']:['UPI','Card','COD'];
+  const payable = m==='EMI' ? emiTotal : total;
   const pay=()=>{setDone(true);alert('✓ Payment successful via '+m+(m==='EMI'?` (${months}mo x ₹${emiPer})`:'')+'! Order confirmed');};
   if(done) return (<div style={{background:'#e8f5e9',padding:20,borderRadius:10,textAlign:'center'}}><div style={{fontSize:40}}>✅</div><h3>Order Placed!</h3><p>{m==='EMI'?`EMI: ₹${emiPer}/mo x ${months}`:`₹${total.toLocaleString('en-IN')} paid via ${m}`}</p><button onClick={()=>alert('✓ Invoice downloaded')} style={{padding:'8px 16px',background:'#1a237e',color:'#fff',border:'none',borderRadius:6}}>Invoice ✓</button></div>);
   return (<div style={{background:'#fff',padding:15,borderRadius:10,border:'1px solid #ddd',fontFamily:'sans-serif'}}>
@@ -29,7 +30,7 @@ export default function PaymentBox({total=5000,productName='iPhone 15'}){
       </div>
     </div>}
     {m==='COD'&&<div style={{background:'#e8f5e9',padding:8,borderRadius:6,fontSize:13,marginTop:8}}>💵 Cash on Delivery - product hate peye taka dio ✓ No advance</div>}
-    <div style={{marginTop:10,fontWeight:'bold',fontSize:18}>Payable: ₹{(m==='EMI'?emiTotal:total).toLocaleString('en-IN')}</div>
+    <div style={{marginTop:10,fontWeight:'bold',fontSize:18}>Payable: Rs.{payable.toLocaleString('en-IN')}</div>
     <button onClick={pay} style={{width:'100%',padding:12,background:'#00c853',color:'#fff',border:'none',borderRadius:8,marginTop:8,fontWeight:'bold',fontSize:16}}>Place Order ✓ {m}</button>
   </div>);
 }
