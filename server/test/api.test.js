@@ -50,6 +50,12 @@ beforeEach(()=>{
 });
 
 describe('health and security middleware',()=>{
+  it('allows the production Vercel frontend through CORS',async()=>{
+    const origin='https://enterprise-ai-powered-smart-gadget-neon.vercel.app';
+    const response=await request(app).get('/api/health').set('Origin',origin);
+    expect(response.status).toBe(200);
+    expect(response.headers['access-control-allow-origin']).toBe(origin);
+  });
   it('reports API health and Mongo connection status',async()=>{
     const response=await request(app).get('/api/health');
     expect(response.status).toBe(200);

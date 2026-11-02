@@ -6,12 +6,15 @@ const swaggerUi = require('swagger-ui-express');
 const openapiSpec = require('./docs/openapi');
 
 const app = express();
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(origin => origin.trim()).filter(Boolean);
+const allowedOrigins = new Set([
+  'https://enterprise-ai-powered-smart-gadget-neon.vercel.app',
+  ...(process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(origin => origin.trim()).filter(Boolean),
+]);
 
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
     callback(new Error('Origin not allowed'));
   },
 }));
