@@ -1,9 +1,10 @@
 import {useState} from 'react';import axios from 'axios';import {Link,useNavigate} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';
+import {calculateCartTotal} from '../../utils/commerce.js';
 const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
 export default function Checkout(){
   const [address,setAddress]=useState('');const [auth]=useState(()=>{try{return JSON.parse(localStorage.getItem('ms_auth')||'null')}catch{return null}});const [error,setError]=useState('');const [submitting,setSubmitting]=useState(false);
   const {cart,placeOrder,moveToWishlist}=useStore();const navigate=useNavigate();
-  const total=cart.reduce((sum,item)=>sum+(Number(item.price)||0),0);
+  const total=calculateCartTotal(cart);
   const submit=async(e)=>{
     e.preventDefault();
     if(!auth?.token){setError('Sign in with a customer account before placing an order.');return}

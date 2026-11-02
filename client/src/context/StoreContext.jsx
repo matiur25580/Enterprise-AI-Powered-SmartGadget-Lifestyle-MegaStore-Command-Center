@@ -1,4 +1,5 @@
 import {createContext,useContext,useState,useEffect} from 'react';
+import {addCartItem} from '../utils/commerce.js';
 const Ctx=createContext();export const useStore=()=>useContext(Ctx);
 export function StoreProvider({children}){
   const [cart,setCart]=useState(()=>JSON.parse(localStorage.getItem('ms_cart')||'[]'));
@@ -9,9 +10,9 @@ export function StoreProvider({children}){
   useEffect(()=>localStorage.setItem('ms_wish',JSON.stringify(wish)),[wish]);
   useEffect(()=>localStorage.setItem('ms_orders',JSON.stringify(orders)),[orders]);
   useEffect(()=>localStorage.setItem('ms_addr',JSON.stringify(addrs)),[addrs]);
-  const addCart=p=>{setCart(c=>[...c,p]);alert('✓ Added to cart: '+p.name)};
+  const addCart=p=>{setCart(c=>addCartItem(c,p));alert('✓ Added to cart: '+p.name)};
   const toggleWish=p=>{setWish(w=>w.find(x=>x._id===p._id)?w.filter(x=>x._id!==p._id):[...w,p]);};
-  const moveToCart=p=>{setCart(c=>[...c,p]);setWish(w=>w.filter(x=>x._id!==p._id));};
+  const moveToCart=p=>{setCart(c=>addCartItem(c,p));setWish(w=>w.filter(x=>x._id!==p._id));};
   const moveToWishlist=p=>{setWish(w=>w.some(x=>x._id===p._id)?w:[p,...w]);setCart(c=>{const index=c.findIndex(x=>x._id===p._id);return index<0?c:c.filter((_,i)=>i!==index)});};
   const placeOrder=(items,addr)=>{const order={id:'MS-'+Date.now().toString().slice(-6),items,date:new Date().toLocaleString('en-IN'),status:'Confirmed',addr};setOrders(previous=>[order,...previous]);setCart([]);return order;};
   const returnOrder=(id,reason)=>{setOrders(o=>o.map(x=>x.id===id?{...x,status:'Return Requested: '+reason}:x));alert('✓ Return request submitted successfully');};

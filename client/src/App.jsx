@@ -8,6 +8,7 @@ import ProductDetail from './pages/shop/ProductDetailLive.jsx';
 import ApiDocs from './pages/shop/ApiDocs.jsx';
 import BulkUpload from './pages/seller/BulkUpload.jsx';
 import HRShowcase from './pages/hr/HRShowcase.jsx';
+import RouteErrorBoundary from './components/RouteErrorBoundary.jsx';
 import SupportChat from './components/SupportChat.jsx';import NotifyCenter from './components/NotifyCenter.jsx';import OfferZone from './components/OfferZone.jsx';
 import {StoreProvider,useStore} from './context/StoreContext.jsx';import {useThemeDate} from './pages/auth/AuthLayout.jsx';
 import HomeProducts from './components/HomeProducts.jsx';
@@ -40,12 +41,12 @@ function Landing(){
   </main>);
 }
 export default function App(){return (<StoreProvider><BrowserRouter><Nav/>
-<Routes>
+<RouteErrorBoundary><Routes>
 <Route path="/" element={<Landing/>}/><Route path="/shop" element={<ShopWrapper/>}/><Route path="/checkout" element={<Checkout/>}/>
 <Route path="/wishlist" element={<Wishlist/>}/><Route path="/orders" element={<Orders/>}/><Route path="/addresses" element={<AddressBook/>}/>
 <Route path="/terms" element={<Terms/>}/><Route path="/settings" element={<Settings/>}/>
 <Route path="/seller" element={<SellerDashboard/>}/><Route path="/admin" element={<AdminDashboard/>}/>
 <Route path="/product/:id" element={<ProductDetail/>}/><Route path="/api-docs" element={<ApiDocs/>}/><Route path="/seller/bulk" element={<BulkUpload/>}/><Route path="/for-hr" element={<HRShowcase/>}/>
 <Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/>
-</Routes><SupportChat/></BrowserRouter></StoreProvider>);
+</Routes></RouteErrorBoundary><SupportChat/></BrowserRouter></StoreProvider>);
 }

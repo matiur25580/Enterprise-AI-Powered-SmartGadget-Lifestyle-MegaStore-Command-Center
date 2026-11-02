@@ -11,4 +11,5 @@ const productSchema=new mongoose.Schema({
   rating:{type:Number,default:4.5},
   image:String,
 },{timestamps:true});
+productSchema.index({category:1,price:1});
 module.exports=mongoose.model('Product',productSchema);

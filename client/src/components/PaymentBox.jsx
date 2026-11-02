@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import {calculateEmi} from '../utils/commerce.js';
 const EMI_KEYS = ['iphone', 'android phone', 'laptop', 'desktop', 'tablet', 'galaxy tab'];
 export default function PaymentBox(props) {
   const total = props.total || 5000;
@@ -9,9 +10,7 @@ export default function PaymentBox(props) {
   const low = productName.toLowerCase();
   let eligible = total >= 15000;
   for (let k of EMI_KEYS) { if (low.includes(k)) { eligible = true; break; } }
-  const emiTotal = Math.round(total * 1.08);
-  const emiPer = Math.round(emiTotal / months);
-  const extra = emiTotal - total;
+  const {total:emiTotal,monthly:emiPer,interest:extra} = calculateEmi(total,months);
   const payable = m === 'EMI' ? emiTotal : total;
   const payStr = String(payable);
   function pay() {

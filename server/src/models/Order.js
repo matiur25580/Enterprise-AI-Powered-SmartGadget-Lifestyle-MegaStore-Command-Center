@@ -7,4 +7,5 @@ const orderSchema=new mongoose.Schema({
   status:{type:String,enum:['Pending','Shipped','Delivered','Cancelled'],default:'Pending'},
   address:String,
 },{timestamps:true});
+orderSchema.index({customerId:1,status:1});
 module.exports=mongoose.model('Order',orderSchema);

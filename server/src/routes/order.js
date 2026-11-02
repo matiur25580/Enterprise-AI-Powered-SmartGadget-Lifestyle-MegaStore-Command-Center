@@ -1,7 +1,8 @@
 const express=require('express');const mongoose=require('mongoose');const Order=require('../models/Order');
 const Product=require('../models/Product');const {protect,allow}=require('../middleware/auth');
+const {validate,orderRules}=require('../middleware/validate');
 const router=express.Router();
-router.post('/create',protect,allow('Customer'),async(req,res)=>{
+router.post('/create',protect,allow('Customer'),orderRules,validate,async(req,res,next)=>{
   let session;
   try{
     const {items,address}=req.body;
@@ -26,18 +27,31 @@ router.post('/create',protect,allow('Customer'),async(req,res)=>{
       [order]=await Order.create([{customerId:req.user.id,customerEmail:req.user.email,items:normalized,total,address:address.trim(),status:'Pending'}],{session});
     });
     res.json({success:true,message:'Order placed successfully',order});
-  }catch(e){res.status(e.status||400).json({success:false,message:e.message})}
+  }catch(e){next(e)}
   finally{if(session)await session.endSession()}
 });
-router.get('/my/:email',protect,allow('Customer'),async(req,res)=>{
-  if(req.params.email!==req.user.email)return res.status(403).json({success:false,message:'Access denied'});
-  try{const list=await Order.find({customerEmail:req.user.email}).sort({createdAt:-1});
-  res.json({success:true,count:list.length,orders:list});}
-  catch(e){res.status(500).json({success:false,message:e.message})}
+router.get('/my',protect,allow('Customer'),async(req,res,next)=>{
+  try{
+    const page=Math.max(1,Number.parseInt(req.query.page,10)||1);
+    const limit=Math.min(100,Math.max(1,Number.parseInt(req.query.limit,10)||20));
+    const filter={customerId:req.user.id};
+    const [orders,total]=await Promise.all([
+      Order.find(filter).sort({createdAt:-1}).skip((page-1)*limit).limit(limit),
+      Order.countDocuments(filter),
+    ]);
+    res.json({success:true,count:total,total,pages:Math.ceil(total/limit),page,orders});
+  }
+  catch(e){next(e)}
 });
-router.put('/status/:id',protect,allow('Admin','DeliveryAgent'),async(req,res)=>{
+router.get('/my/:email',protect,allow('Customer'),async(req,res,next)=>{
+  if(req.params.email!==req.user.email)return res.status(403).json({success:false,message:'Access denied'});
+  try{const list=await Order.find({customerId:req.user.id}).sort({createdAt:-1});
+  res.json({success:true,count:list.length,orders:list});}
+  catch(e){next(e)}
+});
+router.put('/status/:id',protect,allow('Admin','DeliveryAgent'),async(req,res,next)=>{
   try{const o=await Order.findByIdAndUpdate(req.params.id,{status:req.body.status},{new:true});
   res.json({success:true,message:'Order status updated successfully',order:o});}
-  catch(e){res.status(500).json({success:false,message:e.message})}
+  catch(e){next(e)}
 });
 module.exports=router;

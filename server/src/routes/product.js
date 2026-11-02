@@ -1,13 +1,22 @@
 const express=require('express');const Product=require('../models/Product');
 const mongoose=require('mongoose');
 const {protect,allow}=require('../middleware/auth');
+const {body}=require('express-validator');const {validate,productRules}=require('../middleware/validate');
 const router=express.Router();
-router.post('/add',protect,allow('Admin','Seller'),async(req,res)=>{try{
+router.post('/add',protect,allow('Admin','Seller'),productRules,validate,async(req,res,next)=>{try{
   const {name,category,subcategory,price,stock,brand,comboTags,image}=req.body;
   const p=await Product.create({name,category,subcategory,price,stock,brand,comboTags,image,sellerId:req.user.id});
   res.json({success:true,message:'Product added successfully',product:p});
-}catch(e){res.status(400).json({success:false,message:e.message})}});
-router.get('/all',async(req,res)=>{
+}catch(e){next(e)}});
+router.put('/:id',protect,allow('Admin','Seller'),productRules,validate,async(req,res,next)=>{
+  try{
+    const filter={_id:req.params.id};if(req.user.role!=='Admin')filter.sellerId=req.user.id;
+    const product=await Product.findOneAndUpdate(filter,req.body,{new:true,runValidators:true});
+    if(!product)return res.status(404).json({success:false,message:'Product not found'});
+    res.json({success:true,message:'Product updated successfully',product});
+  }catch(e){next(e)}
+});
+router.get('/all',async(req,res,next)=>{
   try{
     const {category,search,minPrice,maxPrice,sort='createdAt',order='desc',page=1,limit=20}=req.query;
     const sortField=['createdAt','price','name','rating'].includes(sort)?sort:'createdAt';
@@ -24,34 +33,34 @@ router.get('/all',async(req,res)=>{
     const total=await Product.countDocuments(q);
     const list=await Product.find(q).sort({[sortField]:order==='asc'?1:-1}).skip(skip).limit(pageSize);
     res.json({success:true,message:'Products fetched successfully',total,pages:Math.ceil(total/pageSize),page:pageNumber,products:list});
-  }catch(e){res.status(500).json({success:false,message:e.message})}
+  }catch(e){next(e)}
 });
-router.get('/:id',async(req,res)=>{
+router.get('/:id',async(req,res,next)=>{
   if(!mongoose.isValidObjectId(req.params.id))return res.status(400).json({success:false,message:'Invalid product id'});
   try{
     const product=await Product.findById(req.params.id);
     if(!product)return res.status(404).json({success:false,message:'Product not found'});
     res.json({success:true,product});
-  }catch(e){res.status(500).json({success:false,message:e.message})}
+  }catch(e){next(e)}
 });
-router.get('/combo/:id',async(req,res)=>{
+router.get('/combo/:id',async(req,res,next)=>{
   try{const main=await Product.findById(req.params.id);if(!main) return res.status(404).json({success:false,message:'Not found'});
   const perfect=await Product.find({_id:{$ne:main._id},comboTags:{$in:main.comboTags}}).limit(8);
   res.json({success:true,message:'Perfect combo found successfully',main:main.name,perfect});}
-  catch(e){res.status(500).json({success:false,message:e.message})}
+  catch(e){next(e)}
 });
-router.put('/stock/:id',protect,allow('Admin','Seller'),async(req,res)=>{try{
+router.put('/stock/:id',protect,allow('Admin','Seller'),body('stock').isInt({min:0}).toInt(),validate,async(req,res,next)=>{try{
   const filter={_id:req.params.id};if(req.user.role!=='Admin')filter.sellerId=req.user.id;
   const p=await Product.findOneAndUpdate(filter,{stock:Number(req.body.stock)},{new:true,runValidators:true});
   if(!p)return res.status(404).json({success:false,message:'Product not found'});
   res.json({success:true,message:'Stock updated successfully',product:p});
-}catch(e){res.status(400).json({success:false,message:e.message})}});
-router.delete('/:id',protect,allow('Admin','Seller'),async(req,res)=>{try{
+}catch(e){next(e)}});
+router.delete('/:id',protect,allow('Admin','Seller'),async(req,res,next)=>{try{
   const filter={_id:req.params.id};if(req.user.role!=='Admin')filter.sellerId=req.user.id;
   const p=await Product.findOneAndDelete(filter);if(!p)return res.status(404).json({success:false,message:'Product not found'});
   res.json({success:true,message:'Product deleted successfully'});
-}catch(e){res.status(400).json({success:false,message:e.message})}});
-router.post('/seed',protect,allow('Admin'),async(req,res)=>{try{
+}catch(e){next(e)}});
+router.post('/seed',protect,allow('Admin'),async(req,res,next)=>{try{
   const existingCount=await Product.countDocuments();
   if(existingCount>=150)return res.json({success:true,message:'Catalog already meets the minimum size',count:existingCount});
   const demo=[
@@ -87,5 +96,5 @@ router.post('/seed',protect,allow('Admin'),async(req,res)=>{try{
   });
   await Product.insertMany(additions);
   res.json({success:true,message:'Catalog expanded to the 150-product minimum',count:startingCount+additions.length});
-}catch(e){res.status(500).json({success:false,message:e.message})}});
+}catch(e){next(e)}});
 module.exports=router;
