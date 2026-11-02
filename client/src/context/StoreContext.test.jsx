@@ -1,0 +1,58 @@
+import {renderHook,act} from '@testing-library/react';
+import {beforeEach,describe,expect,it,vi} from 'vitest';
+import {StoreProvider,useStore} from './StoreContext.jsx';
+
+const wrapper=({children})=><StoreProvider>{children}</StoreProvider>;
+
+describe('StoreContext cart and order logic',()=>{
+  beforeEach(()=>{
+    localStorage.clear();
+    vi.spyOn(window,'alert').mockImplementation(()=>{});
+  });
+
+  it('adds products to the cart and persists them',()=>{
+    const product={_id:'phone',name:'Phone',price:100};
+    const {result}=renderHook(()=>useStore(),{wrapper});
+
+    act(()=>result.current.addCart(product));
+
+    expect(result.current.cart).toEqual([product]);
+    expect(JSON.parse(localStorage.getItem('ms_cart'))).toEqual([product]);
+  });
+
+  it('moves a wishlist product into the cart',()=>{
+    const product={_id:'phone',name:'Phone',price:100};
+    localStorage.setItem('ms_wish',JSON.stringify([product]));
+    const {result}=renderHook(()=>useStore(),{wrapper});
+
+    act(()=>result.current.moveToCart(product));
+
+    expect(result.current.cart).toEqual([product]);
+    expect(result.current.wish).toEqual([]);
+  });
+
+  it('moves a cart product to the wishlist without duplicating it',()=>{
+    const product={_id:'phone',name:'Phone',price:100};
+    localStorage.setItem('ms_cart',JSON.stringify([product]));
+    localStorage.setItem('ms_wish',JSON.stringify([product]));
+    const {result}=renderHook(()=>useStore(),{wrapper});
+
+    act(()=>result.current.moveToWishlist(product));
+
+    expect(result.current.cart).toEqual([]);
+    expect(result.current.wish).toEqual([product]);
+  });
+
+  it('places an order, records it, and clears the cart',()=>{
+    const product={_id:'phone',name:'Phone',price:100};
+    localStorage.setItem('ms_cart',JSON.stringify([product]));
+    const {result}=renderHook(()=>useStore(),{wrapper});
+    let order;
+
+    act(()=>{order=result.current.placeOrder([product],'Home');});
+
+    expect(order).toMatchObject({items:[product],addr:'Home',status:'Confirmed'});
+    expect(result.current.orders).toEqual([order]);
+    expect(result.current.cart).toEqual([]);
+  });
+});
