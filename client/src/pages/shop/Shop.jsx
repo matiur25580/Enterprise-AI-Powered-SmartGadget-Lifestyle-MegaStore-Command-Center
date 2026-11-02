@@ -1,63 +1,139 @@
-import {useLocation} from 'react-router-dom';
-import {useEffect,useState} from 'react';import axios from 'axios';import {useNavigate} from 'react-router-dom';
-import {useStore} from '../../context/StoreContext.jsx';
-import FlashSale from '../../components/FlashSale.jsx';import PincodeEMI from '../../components/PincodeEMI.jsx';
-const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
-export default function Shop(){const __loc=useLocation();const navigate=useNavigate();const {addCart}=useStore();useEffect(()=>{try{const s=new URLSearchParams(__loc.search).get('search');if(s){setQ(function(pr){return Object.assign({},pr,{search:s});});}}catch(e){}},[__loc.search]);/*mega_voice_wired*/
-  const [products,setProducts]=useState([]);const [error,setError]=useState('');
-  const [recent,setRecent]=useState(()=>JSON.parse(localStorage.getItem('recent')||'[]'));
-  const [q,setQ]=useState({search:'',category:'all',page:1});
-  useEffect(()=>{axios.get(`${API}/api/product/all`,{params:{limit:12}}).then(r=>setProducts(r.data.products||[])).catch(()=>setError('Products could not be loaded. Check the API connection and try again.'))},[]);
+import {useCallback,useEffect,useMemo,useState} from 'react';
+import {Link,useLocation} from 'react-router-dom';
+import axios from 'axios';
+import ProductCard,{getDiscount} from '../../components/ProductCard.jsx';
+import FlashSale from '../../components/FlashSale.jsx';
 
-  const view=(p)=>{
-    const nr=[p,...recent.filter(x=>x._id!==p._id)].slice(0,5);
-    setRecent(nr);localStorage.setItem('recent',JSON.stringify(nr));
+const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
+const CATEGORIES=[
+  {label:'All',value:'all'},
+  {label:'Mobile',value:'Mobile'},
+  {label:'Audio & Power',value:'AudioPower'},
+  {label:'Protection',value:'Protection'},
+  {label:'Storage',value:'Storage'},
+  {label:'Computing',value:'Computing'},
+  {label:'Lifestyle',value:'Lifestyle'},
+];
+const PRICE_BUCKETS=[
+  {label:'Any price',value:'all'},
+  {label:'Under ₹1,000',value:'under-1000'},
+  {label:'₹1,000–₹5,000',value:'1000-5000'},
+  {label:'₹5,000–₹20,000',value:'5000-20000'},
+  {label:'Above ₹20,000',value:'above-20000'},
+];
+const SORT_OPTIONS=[
+  {label:'Popularity',value:'popularity'},
+  {label:'Price: Low to High',value:'price-asc'},
+  {label:'Price: High to Low',value:'price-desc'},
+  {label:'Rating',value:'rating'},
+  {label:'Discount',value:'discount'},
+];
+
+function ProductSkeleton(){
+  return <div className="product-card-skeleton" aria-hidden="true"><div className="skeleton-media"/><div className="skeleton-line skeleton-brand"/><div className="skeleton-line"/><div className="skeleton-line skeleton-short"/><div className="skeleton-line skeleton-button"/></div>;
+}
+
+function matchesPrice(product,bucket){
+  const price=Number(product.price)||0;
+  if(bucket==='under-1000')return price<1000;
+  if(bucket==='1000-5000')return price>=1000&&price<=5000;
+  if(bucket==='5000-20000')return price>5000&&price<=20000;
+  if(bucket==='above-20000')return price>20000;
+  return true;
+}
+
+function sortedProducts(products,sort){
+  const list=[...products];
+  if(sort==='price-asc')return list.sort((a,b)=>Number(a.price)-Number(b.price));
+  if(sort==='price-desc')return list.sort((a,b)=>Number(b.price)-Number(a.price));
+  if(sort==='rating')return list.sort((a,b)=>Number(b.rating||0)-Number(a.rating||0));
+  if(sort==='discount')return list.sort((a,b)=>getDiscount(b)-getDiscount(a));
+  if(sort==='popularity')return list.sort((a,b)=>(Number(b.rating||0)*Math.log1p(Number(b.stock)||0))-(Number(a.rating||0)*Math.log1p(Number(a.stock)||0)));
+  return list;
+}
+
+export default function Shop(){
+  const location=useLocation();
+  const [search,setSearch]=useState(()=>new URLSearchParams(location.search).get('search')||'');
+  const [submittedSearch,setSubmittedSearch]=useState(()=>new URLSearchParams(location.search).get('search')||'');
+  const [category,setCategory]=useState('all');
+  const [priceBucket,setPriceBucket]=useState('all');
+  const [sort,setSort]=useState('popularity');
+  const [products,setProducts]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState('');
+  const [retry,setRetry]=useState(0);
+
+  useEffect(()=>{
+    const value=new URLSearchParams(location.search).get('search')||'';
+    setSearch(value);
+    setSubmittedSearch(value);
+  },[location.search]);
+
+  const loadProducts=useCallback(async(signal)=>{
+    setLoading(true);
+    setError('');
+    try{
+      const response=await axios.get(`${API}/api/product/all`,{params:{limit:60,category:category==='all'?undefined:category,search:submittedSearch||undefined},signal});
+      if(!signal.aborted)setProducts(response.data.products||[]);
+    }catch{
+      if(!signal.aborted)setError('We couldn’t load products right now. Check your connection and try again.');
+    }finally{
+      if(!signal.aborted)setLoading(false);
+    }
+  },[category,submittedSearch]);
+
+  useEffect(()=>{
+    const controller=new AbortController();
+    loadProducts(controller.signal);
+    return()=>controller.abort();
+  },[loadProducts,retry]);
+
+  const visibleProducts=useMemo(
+    ()=>sortedProducts(products.filter(product=>matchesPrice(product,priceBucket)),sort),
+    [products,priceBucket,sort],
+  );
+
+  const submitSearch=event=>{
+    event.preventDefault();
+    setSubmittedSearch(search.trim());
   };
 
-  const trending=products.slice(0,3);
-  const inp={padding:8,borderRadius:8,border:'1px solid #ccc'};
-  return (<div style={{padding:20,background:'#f5f7fa',minHeight:'100vh',fontFamily:'sans-serif'}}>
+  return <main className="shop-page">
     <FlashSale/>
-    <h2>🛒 MegaStore - Most Demanded</h2>
-
-    {trending.length>0 && <div style={{background:'#fff',padding:15,borderRadius:10,marginBottom:15}}>
-      <h3>🔥 Trending Now</h3>
-      <div style={{display:'flex',gap:10,overflowX:'auto'}}>
-        {trending.map((p,i)=><div key={i} style={{minWidth:180,background:'#f5f7fa',padding:10,borderRadius:8}}><b>#{i+1} {p.name}</b><br/>₹{p.price?.toLocaleString('en-IN')} <span style={{color:'green',fontSize:12}}>▲ Hot</span></div>)}
+    <section className="shop-catalog-shell" aria-labelledby="shop-heading">
+      <div className="shop-heading-row">
+        <div><p className="shop-eyebrow">DISCOVER YOUR NEXT FAVORITE</p><h1 id="shop-heading">Most Demanded</h1><p className="shop-subtitle">Quality picks for work, home and everyday life.</p></div>
+        <span className="shop-product-count">{loading?'Loading…':`${visibleProducts.length} products`}</span>
       </div>
-    </div>}
 
-    <div style={{display:'flex',gap:8,marginBottom:15}}>
-      <input placeholder="🔍 Search..." value={q.search} onChange={e=>setQ({...q,search:e.target.value})} style={{...inp,flex:1}}/>
-      <button onClick={async()=>{
-        try{setError('');const r=await axios.get(`${API}/api/product/all`,{params:{search:q.search,limit:12}});setProducts(r.data.products||[])}catch{setError('Search failed. Please check the API connection and try again.')}
-      }} style={{...inp,background:'#2a5298',color:'#fff',border:'none'}}>Search ✓</button>
-    </div>
+      <form className="shop-search" onSubmit={submitSearch}>
+        <label className="shop-search-field"><span aria-hidden="true">⌕</span><input aria-label="Search products" placeholder="Search products, brands and more" value={search} onChange={event=>setSearch(event.target.value)}/></label>
+        <button type="submit">Search</button>
+      </form>
 
-    {error&&<p role="alert" style={{padding:12,background:'#ffebee',color:'#b71c1c',borderRadius:8}}>{error}</p>}
-    {!error&&products.length===0&&<p style={{padding:24,textAlign:'center'}}>No products found. Try another search or check back later.</p>}
-
-    <div className="catalog-grid catalog-shop-grid">
-      {products.map(p=>(
-        <div key={p._id} onClick={()=>{view(p);navigate(`/product/${p._id}`)}} style={{background:'#fff',padding:16,borderRadius:12,boxShadow:'0 2px 8px rgba(0,0,0,.08)',cursor:'pointer'}}>
-          <div><span style={{background:'#e3f2fd',padding:'3px 8px',borderRadius:5,fontSize:11}}>{p.category}</span></div>
-          <h3 style={{margin:'10px 0 4px'}}>{p.name}</h3>
-          <small style={{color:'#666'}}>{p.subcategory} | {p.brand}</small>
-          <div style={{margin:'8px 0'}}><span style={{fontSize:22,fontWeight:'bold',color:'#1a237e'}}>₹{p.price?.toLocaleString('en-IN')}</span>{p.mrp>p.price&&<><span style={{textDecoration:'line-through',color:'#999',fontSize:13,marginLeft:8}}>₹{p.mrp.toLocaleString('en-IN')}</span><span style={{color:'green',fontSize:12,fontWeight:'bold',marginLeft:6}}>{Math.round((p.mrp-p.price)/p.mrp*100)}% off</span></>}</div>
-          <div style={{fontSize:12,color:p.stock>0?'#2e7d32':'#b71c1c',marginBottom:8}}>{p.stock>0?`${p.stock} in stock`:'Out of stock'}</div>
-          <PincodeEMI price={p.price}/>
-          <div style={{display:'flex',gap:8,marginTop:10}}>
-            <button disabled={!p.stock} onClick={(e)=>{e.stopPropagation();addCart(p)}} style={{flex:1,padding:10,background:'#ff6f00',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold',opacity:p.stock?1:.5}}>Add to Cart</button>
-            <button disabled={!p.stock} onClick={(e)=>{e.stopPropagation();addCart(p);navigate('/checkout')}} style={{flex:1,padding:10,background:'#00c853',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold',opacity:p.stock?1:.5}}>Buy Now</button>
-          </div>
+      <div className="shop-controls">
+        <div className="shop-filter-group" aria-label="Filter by category">
+          <span className="shop-filter-label">Category</span>
+          <div className="shop-category-chips">{CATEGORIES.map(item=><button type="button" key={item.value} className={`shop-filter-chip${category===item.value?' is-active':''}`} aria-pressed={category===item.value} onClick={()=>setCategory(item.value)}>{item.label}</button>)}</div>
         </div>
-      ))}
-    </div>
+        <div className="shop-secondary-filters">
+          <label className="shop-select-label">Price
+            <select value={priceBucket} onChange={event=>setPriceBucket(event.target.value)}>{PRICE_BUCKETS.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select>
+          </label>
+          <label className="shop-select-label">Sort by
+            <select value={sort} onChange={event=>setSort(event.target.value)}>{SORT_OPTIONS.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select>
+          </label>
+        </div>
+      </div>
 
-    {recent.length>0 && <div style={{marginTop:20,background:'#fff',padding:15,borderRadius:10}}>
-      <h3>👁️ Recently Viewed</h3>
-      <div style={{display:'flex',gap:10}}>{recent.map((p,i)=><div key={i} style={{background:'#f5f7fa',padding:8,borderRadius:8,fontSize:13}}>{p.name}</div>)}</div>
-    </div>}
+      {loading?<div className="catalog-grid shop-product-grid" aria-label="Loading products">{Array.from({length:8},(_,index)=><ProductSkeleton key={index}/>)}</div>:
+        error?<div className="shop-error-state" role="alert"><span className="shop-error-icon" aria-hidden="true">!</span><h2>Products didn’t load</h2><p>{error}</p><button type="button" onClick={()=>setRetry(value=>value+1)}>Retry</button></div>:
+        visibleProducts.length===0?<div className="shop-empty-state"><span aria-hidden="true">⌕</span><h2>No products found</h2><p>Try another search or adjust your filters.</p><button type="button" onClick={()=>{setSearch('');setSubmittedSearch('');setCategory('all');setPriceBucket('all')}}>Clear filters</button></div>:
+        <div className="catalog-grid shop-product-grid">{visibleProducts.map(product=><ProductCard key={product._id} product={product}/>)}</div>}
 
-  </div>);
+      {!loading&&!error&&<p className="shop-results-note">Showing {visibleProducts.length} of {products.length} matching products</p>}
+      <Link to="/" className="shop-home-link">← Back to home</Link>
+    </section>
+  </main>;
 }

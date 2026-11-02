@@ -20,6 +20,15 @@ describe('StoreContext cart and order logic',()=>{
     expect(JSON.parse(localStorage.getItem('ms_cart'))).toEqual([product]);
   });
 
+  it('adds the selected quantity as individual cart items',()=>{
+    const product={_id:'phone',name:'Phone',price:100};
+    const {result}=renderHook(()=>useStore(),{wrapper});
+
+    act(()=>result.current.addCart(product,3));
+
+    expect(result.current.cart).toEqual([product,product,product]);
+  });
+
   it('moves a wishlist product into the cart',()=>{
     const product={_id:'phone',name:'Phone',price:100};
     localStorage.setItem('ms_wish',JSON.stringify([product]));
