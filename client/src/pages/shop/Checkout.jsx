@@ -1,5 +1,6 @@
 import {useState} from 'react';import axios from 'axios';import {Link,useNavigate} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';
 import {calculateCartTotal} from '../../utils/commerce.js';
+import {toast} from '../../utils/notifications.jsx';
 const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
 export default function Checkout(){
   const [address,setAddress]=useState('');const [auth]=useState(()=>{try{return JSON.parse(localStorage.getItem('ms_auth')||'null')}catch{return null}});const [error,setError]=useState('');const [submitting,setSubmitting]=useState(false);
@@ -7,17 +8,18 @@ export default function Checkout(){
   const total=calculateCartTotal(cart);
   const submit=async(e)=>{
     e.preventDefault();
-    if(!auth?.token){setError('Sign in with a customer account before placing an order.');return}
-    if(!cart.length){setError('Your cart is empty. Add a product before checkout.');return}
+    if(!auth?.token){const message='Sign in with a customer account before placing an order.';setError(message);toast.error(message);return}
+    if(!cart.length){const message='Your cart is empty. Add a product before checkout.';setError(message);toast.error(message);return}
     setSubmitting(true);setError('');
+    const loadingToast=toast.loading('Placing your order…');
     try{
       const response=await axios.post(`${API}/api/order/create`,{
         address:address.trim(),
         items:cart.map(item=>({productId:item._id,name:item.name,price:Number(item.price),qty:1})),status:'Pending'
       },{headers:{Authorization:`Bearer ${auth.token}`}});
       if(!response.data?.success)throw new Error(response.data?.message||'Order could not be placed');
-      placeOrder(cart,address.trim());navigate('/orders');
-    }catch(err){setError(err.response?.data?.message||err.message||'Order could not be placed. Please try again.')}
+      placeOrder(cart,address.trim());toast.success('Your order has been placed.',{id:loadingToast});navigate('/orders');
+    }catch{const message='We couldn’t place your order. Please check your connection and try again.';setError(message);toast.error(message,{id:loadingToast});}
     finally{setSubmitting(false)}
   };
   const inp={width:'100%',padding:12,margin:'8px 0',borderRadius:8,border:'1px solid #ccc',boxSizing:'border-box'};

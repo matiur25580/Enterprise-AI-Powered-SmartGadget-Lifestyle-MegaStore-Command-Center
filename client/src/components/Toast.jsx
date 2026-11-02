@@ -1,4 +1,2 @@
-import {useEffect} from 'react';
-export default function toast(msg){
-  alert('✓ '+msg);
-}
+import {toast as notifications} from '../utils/notifications.jsx';
+export default function toast(message){notifications.success(message);}

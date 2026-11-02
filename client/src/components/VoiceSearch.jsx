@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {notifyInfo,toast} from '../utils/notifications.jsx';
 export default function VoiceSearch(){
   const nav=useNavigate();
   const [q,setQ]=useState('');
@@ -17,13 +18,13 @@ export default function VoiceSearch(){
   };
   const mic=()=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(SR===undefined||SR===null){alert('Voice search ei browser e supported na, type koro');return;}
+    if(SR===undefined||SR===null){notifyInfo('Voice search isn’t supported in this browser. You can type your search instead.');return;}
     const rec=new SR();
     rec.lang='en-IN';
     rec.onresult=(e)=>{const t=e.results[0][0].transcript;setQ(t);setListening(false);go(t);};
-    rec.onerror=()=>setListening(false);
+    rec.onerror=()=>{setListening(false);toast.error('Voice search couldn’t start. Please try typing your search.');};
     rec.onend=()=>setListening(false);
-    try{rec.start();setListening(true);}catch(e){setListening(false);}
+    try{rec.start();setListening(true);}catch{setListening(false);toast.error('Voice search couldn’t start. Please try again.');}
   };
   return (<div style={{display:'flex',gap:6,marginTop:10}}>
     <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){go(q);}}} placeholder="Search products... (mic o ache, typo ok)" style={{flex:1,padding:10,borderRadius:8,border:'1px solid #353839',background:'#060606',color:'#e6edf3'}}/>

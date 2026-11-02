@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {toast} from '../utils/notifications.jsx';
 const LOW=[
   {name:'iPhone 15',stock:3},
   {name:'AirPods Pro',stock:5},
@@ -10,12 +11,12 @@ export default function StockAlert(){
     setOn(true);
     if(typeof Notification!=='undefined'&&Notification.requestPermission){
       Notification.requestPermission().then(p=>{
-        if(p==='granted'){alert('Stock alert ON! Low stock hole push pabe.');}
-        else{alert('Stock alert ON (in-app).');}
+        if(p==='granted'){toast.success('Stock alerts are enabled.');}
+        else{toast.success('In-app stock alerts are enabled.');}
       });
-    }else{alert('Stock alert ON (in-app).');}
+    }else{toast.success('In-app stock alerts are enabled.');}
   };
-  const restock=(n)=>{alert(n+' er jonno supplier ke order pathano hoyeche!');};
+  const restock=(n)=>{toast.success(`Restock request prepared for ${n}.`);};
   return (<div style={{background:'#212122',border:'1px solid #353839',borderRadius:12,padding:15,marginTop:12,color:'#e6edf3'}}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
       <h4 style={{margin:0}}>⚠️ Low Stock Alert</h4>

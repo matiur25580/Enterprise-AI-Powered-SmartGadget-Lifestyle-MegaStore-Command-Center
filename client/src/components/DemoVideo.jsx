@@ -1,9 +1,10 @@
 import {useState} from 'react';
+import {toast} from '../utils/notifications.jsx';
 export default function DemoVideo(){
   const load=()=>{try{return localStorage.getItem('mega_demo_video')||'';}catch(e){return '';}};
   const [url,setUrl]=useState(load);
   const [saved,setSaved]=useState(load);
-  const save=()=>{try{localStorage.setItem('mega_demo_video',url);}catch(e){} setSaved(url);alert('Demo video link saved!');};
+  const save=()=>{try{localStorage.setItem('mega_demo_video',url);}catch{toast.error('Could not save your video link. Please try again.');return;}setSaved(url);toast.success('Demo video link saved.');};
   const embed=saved.split('watch?v=').join('embed/').split('youtu.be/').join('youtube.com/embed/');
   return (<div style={{background:'#060606',border:'1px solid #353839',borderRadius:12,padding:15,marginTop:12}}>
     <h4 style={{color:'#e6edf3',margin:'0 0 8px'}}>🎬 Live Demo Video</h4>

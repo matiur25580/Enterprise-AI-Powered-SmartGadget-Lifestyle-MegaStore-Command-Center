@@ -1,20 +1,24 @@
 import {useState} from 'react';
+import {toast} from '../utils/notifications.jsx';
 export default function RazorpayPay({amount=5000}){
   const [done,setDone]=useState(false);
   const pay=()=>{
-    // Razorpay test checkout.js
     if(!window.Razorpay){
       const s=document.createElement('script');s.src='https://checkout.razorpay.com/v1/checkout.js';
-      s.onload=()=>openRzp();document.body.appendChild(s);
+      const loadingToast=toast.loading('Connecting to secure checkout…');
+      s.onload=()=>{toast.dismiss(loadingToast);openRzp();};
+      s.onerror=()=>toast.error('Payment could not be started. Please try again.',{id:loadingToast});
+      document.body.appendChild(s);
     } else openRzp();
   };
   const openRzp=()=>{
     const rzp=new window.【entity-Razorpay¦canonical_name=Razorpay】({
       key:'rzp_test_1DP5mmOlF5G5ag',
       amount:amount*100,currency:'INR',name:'MegaStore',description:'Test Order',
-      handler:(res)=>{setDone(true);alert('Payment successful. ID: '+res.razorpay_payment_id)},
+      handler:()=>{setDone(true);toast.success('Payment successful. Your order is confirmed.')},
       prefill:{email:'test@test.com',contact:'9876543210'},theme:{color:'#2a5298'}
     });
+    rzp.on('payment.failed',()=>toast.error('Payment couldn’t be completed. Please try again.'));
     rzp.open();
   };
   if(done) return (<div style={{background:'#e8f5e9',padding:15,borderRadius:10,textAlign:'center'}}>Payment Successful via Razorpay Test</div>);

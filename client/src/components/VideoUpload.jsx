@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import axios from 'axios';
+import {toast} from '../utils/notifications.jsx';
 const API='https://enterprise-ai-powered-smartgadget.onrender.com';
 export default function VideoUpload(){
   const [loading,setLoading]=useState(false);
@@ -7,14 +8,15 @@ export default function VideoUpload(){
   const onFile=(e)=>{
     const f=e.target.files[0];
     if(f===null||f===undefined){return;}
-    if(f.size>50*1024*1024){alert('Video 50MB er bhitore hote hobe');return;}
+    if(f.size>50*1024*1024){toast.error('Choose a video smaller than 50 MB.');return;}
     setLoading(true);
+    const loadingToast=toast.loading('Uploading your video…');
     const fd=new FormData();
     fd.append('video',f);
     axios.post(API+'/api/upload/review-video',fd).then(()=>{
-      setLoading(false);setDone(true);alert('Video review uploaded!');
+      setLoading(false);setDone(true);toast.success('Video review uploaded.',{id:loadingToast});
     }).catch(()=>{
-      setLoading(false);alert('Upload failed, abar try koro');
+      setLoading(false);toast.error('Video upload failed. Please try again.',{id:loadingToast});
     });
   };
   return (<div style={{background:'#212122',border:'1px solid #353839',borderRadius:12,padding:12,marginTop:10,color:'#e6edf3'}}>

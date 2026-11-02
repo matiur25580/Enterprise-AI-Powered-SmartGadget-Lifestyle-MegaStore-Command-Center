@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {calculateEmi} from '../utils/commerce.js';
+import {toast} from '../utils/notifications.jsx';
 const EMI_KEYS = ['iphone', 'android phone', 'laptop', 'desktop', 'tablet', 'galaxy tab'];
 export default function PaymentBox(props) {
   const total = props.total || 5000;
@@ -15,7 +16,7 @@ export default function PaymentBox(props) {
   const payStr = String(payable);
   function pay() {
     setDone(true);
-    alert('Payment successful via ' + m + '. Order confirmed');
+    toast.success(`Payment complete with ${m}. Your order is confirmed.`);
   }
   if (done) {
     return (

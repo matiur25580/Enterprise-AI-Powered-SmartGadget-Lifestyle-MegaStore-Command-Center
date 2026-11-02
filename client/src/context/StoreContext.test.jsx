@@ -1,5 +1,6 @@
 import {renderHook,act} from '@testing-library/react';
 import {beforeEach,describe,expect,it,vi} from 'vitest';
+import {toast} from 'react-hot-toast';
 import {StoreProvider,useStore} from './StoreContext.jsx';
 
 const wrapper=({children})=><StoreProvider>{children}</StoreProvider>;
@@ -7,7 +8,6 @@ const wrapper=({children})=><StoreProvider>{children}</StoreProvider>;
 describe('StoreContext cart and order logic',()=>{
   beforeEach(()=>{
     localStorage.clear();
-    vi.spyOn(window,'alert').mockImplementation(()=>{});
   });
 
   it('adds products to the cart and persists them',()=>{
@@ -27,6 +27,18 @@ describe('StoreContext cart and order logic',()=>{
     act(()=>result.current.addCart(product,3));
 
     expect(result.current.cart).toEqual([product,product,product]);
+  });
+
+  it('does not add out-of-stock products and shows an error toast',()=>{
+    const product={_id:'phone',name:'Phone',price:100,stock:0};
+    const showError=vi.spyOn(toast,'error').mockImplementation(()=>undefined);
+    const {result}=renderHook(()=>useStore(),{wrapper});
+
+    act(()=>result.current.addCart(product));
+
+    expect(result.current.cart).toEqual([]);
+    expect(showError).toHaveBeenCalledWith('This item is currently out of stock.');
+    showError.mockRestore();
   });
 
   it('moves a wishlist product into the cart',()=>{

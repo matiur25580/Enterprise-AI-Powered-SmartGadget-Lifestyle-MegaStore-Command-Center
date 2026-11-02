@@ -1,9 +1,10 @@
-import {useState} from 'react';import {useParams,Link} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';
+import {useState} from 'react';import {useParams,Link,useNavigate} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';
 import Product3D from '../../components/Product3D.jsx';
 import Compare from '../../components/Compare.jsx';
 import PriceAlert from '../../components/PriceAlert.jsx';
 import ReviewQA from '../../components/ReviewQA.jsx';import DeliveryTrack from '../../components/DeliveryTrack.jsx';
 import HaggleBot from '../../components/HaggleBot.jsx';import FlashDeal from '../../components/FlashDeal.jsx';import VideoUpload from '../../components/VideoUpload.jsx';
+import {toast} from '../../utils/notifications.jsx';
 // 6 alada design er product slides - prottekta product related
 const SLIDES=[
  {bg:'linear-gradient(135deg,#0f2027,#203a43,#2c5364)',icon:'📱',title:'iPhone 15 - Front View',desc:'6.1" Super Retina XDR display, Dynamic Island',tag:'DISPLAY'},
@@ -14,8 +15,12 @@ const SLIDES=[
  {bg:'linear-gradient(135deg,#11998e,#38ef7d)',icon:'📦',title:'What is in the Box',desc:'iPhone 15, USB-C cable, SIM ejector, manual',tag:'BOX'},
 ];
 export default function ProductDetail(){
-  const {id}=useParams();const {addCart,toggleWish,wish}=useStore();
+  const {id}=useParams();const {addCart,toggleWish,wish}=useStore();const navigate=useNavigate();
   const [idx,setIdx]=useState(0);const [full,setFull]=useState(false);
+  const share=()=>{
+    if(!navigator.clipboard?.writeText){toast.error('Link sharing isn’t available in this browser.');return;}
+    navigator.clipboard.writeText(window.location.href).then(()=>toast.success('Product link copied.')).catch(()=>toast.error('Could not copy the product link.'));
+  };
   const [color,setColor]=useState('Black');const [size,setSize]=useState('128 GB');
   const price=66999,mrp=79900,off=Math.round((1-price/mrp)*100);
   const p={_id:id||'1',name:'iPhone 15',price};const isW=wish.find(x=>x._id===p._id);
@@ -42,11 +47,11 @@ export default function ProductDetail(){
         </div>
         <div style={{display:'flex',gap:8,marginTop:10}}>
           <button onClick={()=>addCart(p)} style={{flex:1,padding:12,background:'#ff9f00',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold'}}>🛒 ADD TO CART</button>
-          <button onClick={()=>alert('✓ Buy Now - order placed')} style={{flex:1,padding:12,background:'#fb641b',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold'}}>⚡ BUY NOW</button>
+          <button onClick={()=>{addCart(p);navigate('/checkout')}} style={{flex:1,padding:12,background:'#fb641b',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold'}}>⚡ BUY NOW</button>
         </div>
         <div style={{display:'flex',gap:8,marginTop:8}}>
-          <button onClick={()=>{toggleWish(p);alert(isW?'✓ Removed':'✓ Wishlist e add holo')}} style={{flex:1,padding:8,border:'1px solid #ddd',borderRadius:8,background:isW?'#ffebee':'#fff'}}>{isW?'❤️':'🤍'} WISHLIST</button>
-          <button onClick={()=>{navigator.clipboard?.writeText(location.href);alert('✓ Link copied')}} style={{flex:1,padding:8,border:'1px solid #ddd',borderRadius:8}}>🔗 SHARE</button>
+          <button onClick={()=>{toggleWish(p);toast.success(isW?'Removed from your wishlist.':'Added to your wishlist.')}} style={{flex:1,padding:8,border:'1px solid #ddd',borderRadius:8,background:isW?'#ffebee':'#fff'}}>{isW?'❤️':'🤍'} WISHLIST</button>
+          <button onClick={share} style={{flex:1,padding:8,border:'1px solid #ddd',borderRadius:8}}>🔗 SHARE</button>
         </div>
       </div>
       <div>

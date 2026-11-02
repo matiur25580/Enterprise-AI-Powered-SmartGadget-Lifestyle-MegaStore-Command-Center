@@ -1,4 +1,5 @@
 import {useState} from 'react';import axios from 'axios';
+import {toast} from '../utils/notifications.jsx';
 export default function PhotoUpload({onUpload}){
   const [preview,setPreview]=useState(null);const [loading,setLoading]=useState(false);
   const handle=async(e)=>{
@@ -7,8 +8,8 @@ export default function PhotoUpload({onUpload}){
     try{
       const fd=new FormData();fd.append('photo',file);
       const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/upload/product-photo',fd);
-      alert('Photo uploaded successfully');onUpload&&onUpload(r.data.url);
-    }catch{alert('Upload failed - using preview only');onUpload&&onUpload(preview)}
+      toast.success('Photo uploaded successfully.');onUpload&&onUpload(r.data.url);
+    }catch{toast.error('Photo upload failed. You can keep using the preview.');onUpload&&onUpload(preview)}
     setLoading(false);
   };
   return (<div style={{border:'2px dashed #2a5298',borderRadius:10,padding:15,textAlign:'center',marginTop:10}}>

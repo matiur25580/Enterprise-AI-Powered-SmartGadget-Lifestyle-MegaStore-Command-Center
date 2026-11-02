@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react';import {Link,useNavigate} from 'react-router-dom';import axios from 'axios';import './auth.css';
+import {toast} from '../../utils/notifications.jsx';
 export default function Login(){
   const [dark,setDark]=useState(false);const [now,setNow]=useState(new Date());
   const [f,setF]=useState({emailOrId:'',password:'',role:''});const [showPw,setShowPw]=useState(false);
@@ -6,8 +7,9 @@ export default function Login(){
   useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
   const dd=String(now.getDate()).padStart(2,'0'),mm=String(now.getMonth()+1).padStart(2,'0'),h12=now.getHours()%12||12,ap=now.getHours()>=12?'PM':'AM';
   const date=`${dd}.${mm}.${now.getFullYear()}`,time=`${String(h12).padStart(2,'0')}.${String(now.getMinutes()).padStart(2,'0')}.${String(now.getSeconds()).padStart(2,'0')} ${ap}`;
-  const submit=async(e)=>{e.preventDefault();if(!f.role) return alert('✕ Please select your role');
-    try{const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/login',f);localStorage.setItem('ms_auth',JSON.stringify({token:r.data.token,role:r.data.role,email:r.data.email,fullName:r.data.fullName}));alert('✓ '+r.data.message);nav('/shop');}catch(err){alert('✕ '+(err.response?.data?.message||'Login failed'))}};
+  const submit=async(e)=>{e.preventDefault();if(!f.role)return toast.error('Select your account type to continue.');
+    const loadingToast=toast.loading('Signing you in…');
+    try{const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/login',f);localStorage.setItem('ms_auth',JSON.stringify({token:r.data.token,role:r.data.role,email:r.data.email,fullName:r.data.fullName}));toast.success('Welcome back. You’re signed in.',{id:loadingToast});nav('/shop');}catch{toast.error('We couldn’t sign you in. Check your details and try again.',{id:loadingToast});}};
   return (<div className="auth-bg"><form onSubmit={submit} className={'auth-card'+(dark?' dark':'')}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><h2>🛒 MegaStore</h2><button type="button" onClick={()=>setDark(!dark)} style={{padding:'6px 12px',borderRadius:15,border:'none'}}>{dark?'☀️':'🌙'}</button></div>
     <div style={{fontSize:12,opacity:.6,textAlign:'center'}}>{date} | {time}</div>

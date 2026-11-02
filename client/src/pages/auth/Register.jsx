@@ -1,13 +1,15 @@
 import {useState,useEffect} from 'react';import {Link} from 'react-router-dom';import axios from 'axios';import './auth.css';
+import {toast} from '../../utils/notifications.jsx';
 export default function Register(){
   const [dark,setDark]=useState(false);const [now,setNow]=useState(new Date());
   const [f,setF]=useState({fullName:'',email:'',contact:'',dob:'',password:'',confirm:'',role:''});
   const [otpArr,setOtpArr]=useState(['','','','','','']);const [step,setStep]=useState(1);const [done,setDone]=useState(null);
   useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
   const date=`${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
-  const sendOtp=async()=>{if(!f.email||!f.role) return alert('✕ Email and role required');if(f.password!==f.confirm) return alert('✕ Passwords do not match');
-    try{await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/send-otp',{email:f.email,role:f.role});setStep(2);alert('✓ OTP sent successfully - valid 5 min');}catch{alert('✕ OTP failed')}};
-  const submit=async(e)=>{e.preventDefault();try{const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/register',{...f,otp:otpArr.join('')});setDone(r.data);setStep(3);alert('✓ '+r.data.message);}catch(err){alert('✕ '+(err.response?.data?.message||'Failed'))}};
+  const sendOtp=async()=>{if(!f.email||!f.role)return toast.error('Enter your email and select an account type.');if(f.password!==f.confirm)return toast.error('Your passwords don’t match.');
+    const loadingToast=toast.loading('Sending your verification code…');
+    try{await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/send-otp',{email:f.email,role:f.role});setStep(2);toast.success('Verification code sent. It’s valid for 5 minutes.',{id:loadingToast});}catch{toast.error('We couldn’t send your verification code. Please try again.',{id:loadingToast});}};
+  const submit=async(e)=>{e.preventDefault();const loadingToast=toast.loading('Creating your account…');try{const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/register',{...f,otp:otpArr.join('')});setDone(r.data);setStep(3);toast.success('Your account is ready.',{id:loadingToast});}catch{toast.error('We couldn’t complete registration. Check your details and code.',{id:loadingToast});}};
   if(done) return (<div className="auth-bg"><div className="auth-card" style={{textAlign:'center'}}><div style={{fontSize:50}}>🎉</div><h2>Welcome {done.fullName}!</h2><div style={{background:'#e3f2fd',padding:15,borderRadius:10,margin:'15px 0'}}><small>Your Unique ID</small><h2 style={{color:'#1565c0'}}>{done.uniqueId}</h2><small>⚠️ Save kore rakho</small></div><Link to="/login" className="auth-btn auth-btn-primary" style={{display:'block',textDecoration:'none',textAlign:'center'}}>Go to Login ✓</Link></div></div>);
   return (<div className="auth-bg"><form onSubmit={submit} className={'auth-card'+(dark?' dark':'')}>
     <div style={{display:'flex',justifyContent:'space-between'}}><h2>📝 Register</h2><button type="button" onClick={()=>setDark(!dark)} style={{padding:'6px 12px',borderRadius:15,border:'none'}}>{dark?'☀️':'🌙'}</button></div>

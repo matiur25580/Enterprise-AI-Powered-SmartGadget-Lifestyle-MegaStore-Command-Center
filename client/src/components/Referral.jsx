@@ -1,14 +1,15 @@
 import {useState} from 'react';
+import {notifyInfo,toast} from '../utils/notifications.jsx';
 export default function Referral(){
   const code='RUBEL100';
   const [invites,setInvites]=useState(3);
   const [earned,setEarned]=useState(250);
   const copy=()=>{
     const link='https://megastore.vercel.app/register?ref='+code;
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(link).then(()=>alert('Referral link copied!')).catch(()=>alert('Code: '+code));}
-    else{alert('Code: '+code);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(link).then(()=>toast.success('Referral link copied.')).catch(()=>notifyInfo(`Your referral code is ${code}.`));}
+    else{notifyInfo(`Your referral code is ${code}.`);}
   };
-  const invite=()=>{setInvites(invites+1);setEarned(earned+100);alert('Invite pathano hoyeche! Friend kinle Rs.100 bonus.');};
+  const invite=()=>{setInvites(invites+1);setEarned(earned+100);toast.success('Invite recorded. Earn ₹100 when your friend makes a purchase.');};
   return (<div style={{background:'#212122',border:'1px solid #353839',borderRadius:12,padding:15,marginTop:12,color:'#e6edf3'}}>
     <h4 style={{margin:'0 0 6px'}}>🎁 Refer & Earn</h4>
     <p style={{fontSize:13,color:'#8b949e',margin:'0 0 8px'}}>Friend ke invite koro, prottek purchase e <b style={{color:'#3fb950'}}>Rs.100</b> bonus!</p>

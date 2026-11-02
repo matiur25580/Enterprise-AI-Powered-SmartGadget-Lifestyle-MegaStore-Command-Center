@@ -1,7 +1,8 @@
 import {Link} from 'react-router-dom';import {useState} from 'react';
+import {toast} from '../../utils/notifications.jsx';
 export default function Settings(){
   const [dark,setDark]=useState(false);const [notif,setNotif]=useState(true);const [lang,setLang]=useState('English');
-  const save=()=>alert('✓ Settings saved successfully');
+  const save=()=>toast.success('Settings saved successfully.');
   return (<div style={{padding:20,maxWidth:600,margin:'0 auto',fontFamily:'sans-serif',background:dark?'#121212':'#fff',color:dark?'#fff':'#000',minHeight:'80vh',borderRadius:12}}>
     <Link to="/shop">← Shop</Link><h2>⚙️ Settings</h2>
     <div style={{background:dark?'#1e1e1e':'#f5f5f5',padding:15,borderRadius:10,margin:'10px 0'}}>

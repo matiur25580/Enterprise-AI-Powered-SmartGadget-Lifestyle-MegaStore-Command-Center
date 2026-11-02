@@ -1,8 +1,9 @@
 import {useState} from 'react';import {Link} from 'react-router-dom';import axios from 'axios';import './auth.css';
+import {toast} from '../../utils/notifications.jsx';
 export default function ForgotPassword(){
   const [dark,setDark]=useState(false);const [step,setStep]=useState(1);const [f,setF]=useState({email:'',role:'',otp:'',newPassword:''});
-  const send=async(e)=>{e.preventDefault();try{await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/forgot-password',{email:f.email,role:f.role});setStep(2);alert('✓ Reset OTP sent successfully');}catch(err){alert('✕ '+(err.response?.data?.message||'Failed'))}};
-  const reset=async(e)=>{e.preventDefault();try{const r=await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/reset-password',f);alert('✓ '+r.data.message);setStep(3);}catch(err){alert('✕ '+(err.response?.data?.message||'Failed'))}};
+  const send=async(e)=>{e.preventDefault();const loadingToast=toast.loading('Sending your reset code…');try{await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/forgot-password',{email:f.email,role:f.role});setStep(2);toast.success('Password reset code sent.',{id:loadingToast});}catch{toast.error('We couldn’t send a reset code. Check your details and try again.',{id:loadingToast});}};
+  const reset=async(e)=>{e.preventDefault();const loadingToast=toast.loading('Updating your password…');try{await axios.post('https://enterprise-ai-powered-smartgadget.onrender.com/api/auth/reset-password',f);toast.success('Your password has been updated.',{id:loadingToast});setStep(3);}catch{toast.error('We couldn’t update your password. Check the code and try again.',{id:loadingToast});}};
   return (<div className="auth-bg"><div className={'auth-card'+(dark?' dark':'')}>
     <div style={{display:'flex',justifyContent:'space-between'}}><h2>🔑 Forgot Password</h2><button onClick={()=>setDark(!dark)} style={{padding:'6px 12px',borderRadius:15,border:'none'}}>{dark?'☀️':'🌙'}</button></div>
     <div className="step-dots"><div className={'step-dot '+(step>=1?'done':'')}>1</div><div className={'step-dot '+(step===2?'active':step>2?'done':'')}>2</div><div className={'step-dot '+(step===3?'done':'')}>✓</div></div>

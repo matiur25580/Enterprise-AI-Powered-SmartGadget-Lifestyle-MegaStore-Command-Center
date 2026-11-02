@@ -1,10 +1,13 @@
 import {useState} from 'react';import {Link} from 'react-router-dom';
 import SellerChat from '../../components/SellerChat.jsx';import StockAlert from '../../components/StockAlert.jsx';
+import ConfirmDialog from '../../components/ConfirmDialog.jsx';
+import {toast} from '../../utils/notifications.jsx';
 const init=[{_id:'1',name:'iPhone 15',price:66999,stock:3},{_id:'2',name:'Galaxy A55',price:39999,stock:25},{_id:'3',name:'AirPods Pro',price:19999,stock:4}];
 export default function SellerDashboard(){
-  const [prods,setProds]=useState(init);const [edit,setEdit]=useState(null);
-  const del=(id)=>{if(confirm('Delete?')){setProds(prods.filter(p=>p._id!==id));alert('✓ Product deleted successfully')}};
-  const save=()=>{setProds(prods.map(p=>p._id===edit._id?edit:p));setEdit(null);alert('✓ Product updated successfully')};
+  const [prods,setProds]=useState(init);const [edit,setEdit]=useState(null);const [deleteId,setDeleteId]=useState(null);
+  const del=(id)=>setDeleteId(id);
+  const confirmDelete=()=>{setProds(prods.filter(p=>p._id!==deleteId));setDeleteId(null);toast.success('Product deleted successfully.');};
+  const save=()=>{setProds(prods.map(p=>p._id===edit._id?edit:p));setEdit(null);toast.success('Product updated successfully.');};
   return (<div style={{padding:20,maxWidth:900,margin:'0 auto',fontFamily:'sans-serif'}}>
     <Link to="/">← Home</Link><h2>🏪 Seller Dashboard</h2>
     <div style={{background:'#ffebee',padding:12,borderRadius:8,marginBottom:12}}>
@@ -24,5 +27,6 @@ export default function SellerDashboard(){
         <div style={{display:'flex',gap:8}}><button onClick={save} style={{flex:1,padding:10,background:'#00c853',color:'#fff',border:'none',borderRadius:6}}>Save ✓</button><button onClick={()=>setEdit(null)} style={{flex:1,padding:10,background:'#ccc',border:'none',borderRadius:6}}>Cancel</button></div>
       </div>
     </div>}
+  {deleteId&&<ConfirmDialog title="Delete product?" message="This product will be removed from your seller catalog." confirmLabel="Delete product" danger onCancel={()=>setDeleteId(null)} onConfirm={confirmDelete}/>}
   <SellerChat/><StockAlert/></div>);
 }

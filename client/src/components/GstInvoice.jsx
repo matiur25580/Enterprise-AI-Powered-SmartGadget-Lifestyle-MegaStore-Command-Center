@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {toast} from '../utils/notifications.jsx';
 export default function GstInvoice({orderId='MS-10234',amount=69999}){
   const [company,setCompany]=useState('');
   const [gstin,setGstin]=useState('');
@@ -11,7 +12,7 @@ export default function GstInvoice({orderId='MS-10234',amount=69999}){
     <h4 style={{margin:'0 0 6px'}}>🧾 GST Invoice (Business)</h4>
     <input value={company} onChange={e=>setCompany(e.target.value)} placeholder="Company name" style={inp}/>
     <input value={gstin} onChange={e=>setGstin(e.target.value.toUpperCase())} placeholder="GSTIN (15 characters)" maxLength={15} style={inp}/>
-    <button onClick={()=>{if(valid){setShow(true);}else{alert('15-char GSTIN dao');}}} style={{padding:'10px 16px',background:'#1f6feb',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold'}}>Generate Invoice</button>
+    <button onClick={()=>{if(valid){setShow(true);toast.success('GST invoice generated.');}else{toast.error('Enter a valid 15-character GSTIN.');}}} style={{padding:'10px 16px',background:'#1f6feb',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold'}}>Generate Invoice</button>
     {show&&<div style={{marginTop:10,background:'#060606',border:'1px solid #353839',borderRadius:8,padding:12,fontSize:13}}>
       <b>Tax Invoice - {orderId}</b>
       <div>Billed to: {company} ({gstin})</div>

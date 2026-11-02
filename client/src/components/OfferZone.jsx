@@ -1,13 +1,14 @@
 import {useState,useEffect} from 'react';
 import {calculateCouponDiscount} from '../utils/commerce.js';
 import {useStore} from '../context/StoreContext.jsx';
+import {toast} from '../utils/notifications.jsx';
 export default function OfferZone(){
   const [sec,setSec]=useState(5*3600+23*60);
   useEffect(()=>{const t=setInterval(()=>setSec(s=>s>0?s-1:0),1000);return()=>clearInterval(t)},[]);
   const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;
   const [coupon,setCoupon]=useState('');const [applied,setApplied]=useState(null);
   const {cart}=useStore();
-  const apply=()=>{const c={MEGA10:10,DIWALI20:20,NEWUSER15:15};if(c[coupon.toUpperCase()]){setApplied({code:coupon.toUpperCase(),off:c[coupon.toUpperCase()]});alert('Coupon applied: '+coupon.toUpperCase()+' - '+c[coupon.toUpperCase()]+'% OFF')}else alert('Invalid coupon')};
+  const apply=()=>{const c={MEGA10:10,DIWALI20:20,NEWUSER15:15};if(c[coupon.toUpperCase()]){setApplied({code:coupon.toUpperCase(),off:c[coupon.toUpperCase()]});toast.success(`Coupon applied: ${coupon.toUpperCase()} · ${c[coupon.toUpperCase()]}% off.`)}else toast.error('That coupon code isn’t valid. Check it and try again.')};
   return (<div style={{fontFamily:'sans-serif'}}>
     <div style={{background:'linear-gradient(90deg,#2B1B17,#3B3131)',color:'#e6edf3',padding:12,textAlign:'center',fontWeight:'bold',borderBottom:'1px solid #353839'}}>
       MEGA SALE ends in {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')} | Extra 10% off on 3+ items | Free delivery over Rs.499

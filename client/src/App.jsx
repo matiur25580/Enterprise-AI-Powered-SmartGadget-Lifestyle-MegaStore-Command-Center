@@ -1,4 +1,5 @@
 import {BrowserRouter,Routes,Route,Link} from 'react-router-dom';
+import {Toaster} from 'react-hot-toast';
 import Login from './pages/auth/Login.jsx';import Register from './pages/auth/Register.jsx';import ForgotPassword from './pages/auth/ForgotPassword.jsx';
 import ShopWrapper from './pages/shop/ShopWrapper.jsx';import Checkout from './pages/shop/Checkout.jsx';
 import Wishlist from './pages/shop/Wishlist.jsx';import Orders from './pages/shop/Orders.jsx';import AddressBook from './pages/shop/AddressBook.jsx';
@@ -40,7 +41,7 @@ function Landing(){
     <div style={{maxWidth:1120,margin:'0 auto',paddingTop:20}}><HomeProducts/></div>
   </main>);
 }
-export default function App(){return (<StoreProvider><BrowserRouter><Nav/>
+export default function App(){return (<StoreProvider><BrowserRouter><Toaster position="top-center" containerStyle={{top:'clamp(150px, 22vh, 210px)',maxWidth:'90vw'}} toastOptions={{duration:3000,style:{maxWidth:'90vw',borderRadius:12,boxShadow:'0 10px 35px rgba(0,0,0,.18)',fontFamily:'inherit',padding:'12px 16px'},success:{iconTheme:{primary:'#16834b',secondary:'#fff'}},error:{iconTheme:{primary:'#dc2626',secondary:'#fff'}}}}/><Nav/>
 <RouteErrorBoundary><Routes>
 <Route path="/" element={<Landing/>}/><Route path="/shop" element={<ShopWrapper/>}/><Route path="/checkout" element={<Checkout/>}/>
 <Route path="/wishlist" element={<Wishlist/>}/><Route path="/orders" element={<Orders/>}/><Route path="/addresses" element={<AddressBook/>}/>

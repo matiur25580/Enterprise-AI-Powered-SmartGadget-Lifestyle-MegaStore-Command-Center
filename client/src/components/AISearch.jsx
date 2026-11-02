@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {notifyInfo} from '../utils/notifications.jsx';
 export default function AISearch(){
   const [q,setQ]=useState('');const [ans,setAns]=useState('');
   const ask=()=>{
@@ -15,7 +16,7 @@ export default function AISearch(){
     <div style={{display:'flex',gap:8,marginTop:8}}>
       <input value={q} onChange={e=>setQ(e.target.value)} placeholder='Bolo: "10000 budget e valo phone dao" / Voice 🎤' style={{flex:1,padding:10,borderRadius:8,border:'none'}}/>
       <button onClick={ask} style={{padding:'10px 16px',background:'#00e676',border:'none',borderRadius:8,fontWeight:'bold'}}>Ask ✓</button>
-      <button onClick={()=>alert('🎤 Voice search: "iPhone khujo" bolo (demo) ✓')} style={{padding:'10px 14px',background:'#ff9800',border:'none',borderRadius:8}}>🎤</button>
+      <button onClick={()=>notifyInfo('Try voice search by saying “Find an iPhone”.')} style={{padding:'10px 14px',background:'#ff9800',border:'none',borderRadius:8}}>🎤</button>
     </div>
     {ans&&<div style={{marginTop:10,background:'rgba(255,255,255,.15)',padding:10,borderRadius:8,fontSize:14}}>{ans}</div>}
   </div>);
