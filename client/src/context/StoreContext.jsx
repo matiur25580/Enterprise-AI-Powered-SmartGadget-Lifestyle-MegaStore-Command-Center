@@ -11,7 +11,9 @@ export function StoreProvider({children}){
   useEffect(()=>localStorage.setItem('ms_addr',JSON.stringify(addrs)),[addrs]);
   const addCart=p=>{setCart(c=>[...c,p]);alert('✓ Added to cart: '+p.name)};
   const toggleWish=p=>{setWish(w=>w.find(x=>x._id===p._id)?w.filter(x=>x._id!==p._id):[...w,p]);};
-  const placeOrder=(items,addr)=>{const o={id:'MS-'+Date.now().toString().slice(-6),items,date:new Date().toLocaleString('en-IN'),status:'Confirmed',addr};setOrders(o=>[o,...o]);setCart([]);return o;};
+  const moveToCart=p=>{setCart(c=>[...c,p]);setWish(w=>w.filter(x=>x._id!==p._id));};
+  const moveToWishlist=p=>{setWish(w=>w.some(x=>x._id===p._id)?w:[p,...w]);setCart(c=>{const index=c.findIndex(x=>x._id===p._id);return index<0?c:c.filter((_,i)=>i!==index)});};
+  const placeOrder=(items,addr)=>{const order={id:'MS-'+Date.now().toString().slice(-6),items,date:new Date().toLocaleString('en-IN'),status:'Confirmed',addr};setOrders(previous=>[order,...previous]);setCart([]);return order;};
   const returnOrder=(id,reason)=>{setOrders(o=>o.map(x=>x.id===id?{...x,status:'Return Requested: '+reason}:x));alert('✓ Return request submitted successfully');};
-  return <Ctx.Provider value={{cart,setCart,addCart,wish,toggleWish,orders,placeOrder,returnOrder,addrs,setAddrs}}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{cart,setCart,addCart,wish,toggleWish,moveToCart,moveToWishlist,orders,placeOrder,returnOrder,addrs,setAddrs}}>{children}</Ctx.Provider>;
 }

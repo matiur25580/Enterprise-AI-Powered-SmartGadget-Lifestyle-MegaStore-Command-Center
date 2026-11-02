@@ -9,7 +9,7 @@
 [Deploy Frontend](https://img.shields.io/badge/deploy-Vercel-000000.svg)
 [Deploy Backend](https://img.shields.io/badge/deploy-Render-46E3B7.svg)
 
-> A production-grade, full-stack MERN e-commerce platform with role-based access control, AI-assisted shopping features, real email OTP authentication, online payments, and live cloud deployment.
+> A MERN e-commerce portfolio project with a React storefront, Express API, MongoDB persistence, OTP authentication, and role-aware catalog operations. Several shopping widgets and operational dashboards are prototypes; implementation status is documented below.
 
 ---
 
@@ -40,9 +40,14 @@
 
 ## 📌 Overview
 
-MegaStore Command Center is an enterprise-style e-commerce command platform built with the **MERN stack** (MongoDB, Express.js, React, Node.js). It supports the complete commerce lifecycle — product catalog management, AI-assisted product discovery, secure checkout with online payments, order fulfilment tracking, seller operations, and business invoicing — across **6 distinct user roles**.
+MegaStore Command Center is an e-commerce portfolio project built with the **MERN stack** (MongoDB, Express.js, React, Node.js). It currently includes a catalog API, JWT-based sign-in, email OTP registration/password reset, and a COD order endpoint. The interface also contains shopping and operations concepts at varying levels of completion.
 
-The project was designed with production concerns in mind: JWT-based authentication with email OTP verification, compound unique constraints for multi-role accounts, file upload handling, payment gateway integration, and separate cloud deployments for frontend and backend.
+The API uses JWT authentication, hashed short-lived OTPs, role checks for catalog/order operations, server-calculated order totals, MongoDB transactions for stock reservation, and bounded media uploads. This repository does not yet include a production payment integration or automated test suite.
+
+### Implementation Status
+- **Implemented API flows:** registration/login/password reset, public product listing/search, role-protected product mutation, COD order creation with server-side prices and transactional stock reservation, image/video upload endpoints.
+- **Partially implemented UI:** checkout submits to the API, but the order-history screen and cancel/return actions still use browser storage; seller/admin dashboards and many promotional/AI-labelled widgets use local sample behavior.
+- **Not implemented:** Razorpay payment processing, measured Lighthouse scores, automated tests, and production monitoring. Treat the HR showcase metrics and feature widgets as presentation content, not verified production evidence.
 
 ---
 
@@ -62,13 +67,12 @@ The project was designed with production concerns in mind: JWT-based authenticat
 
 ## 🌟 Key Highlights
 
-- **6 role-based dashboards** — Admin, Seller, Customer, DeliveryAgent, SupportAgent, MarketingManager, each with dedicated workflows
-- **Real authentication** — 6-box email OTP via Gmail SMTP, unique user IDs (`XYZDDMMYYYY`), JWT sessions; no hardcoded demo logins
-- **AI-assisted shopping** — visual search by photo, price negotiation chatbot, voice search with typo correction, smart product combos
-- **Complete order lifecycle** — cart → checkout (COD / EMI / Razorpay) → live delivery map → GST invoice → return/exchange
-- **Seller operations** — product CRUD, bulk CSV import with template, low-stock push alerts, live customer chat
-- **Business-ready invoicing** — GST-compliant invoices with GSTIN validation, CGST/SGST split, print/PDF export
-- **Dedicated HR showcase page** (`/for-hr`) — architecture diagram, performance metrics, engineering decisions
+- **Six account roles** — role values exist in the authentication model; not every role has a working dashboard
+- **Authentication** — email OTP, unique IDs, password hashing, and JWT sign-in
+- **Catalog and COD checkout** — API-backed product data, server-side price calculation, stock reservation, and order persistence
+- **Shopping prototypes** — visual/voice search, price suggestions, deal widgets, delivery map, and invoice components are client-side experiences and are not backed by dedicated AI/payment/fulfilment services
+- **Seller API** — protected product creation, stock changes, and deletion; seller dashboard UI is not yet API-backed
+- **HR showcase page** (`/for-hr`) — architecture diagram and project notes; displayed performance badges are static, not measured
 - **Dark-first responsive UI** — works on mobile, tablet, and desktop
 
 ---
@@ -84,21 +88,21 @@ The project was designed with production concerns in mind: JWT-based authenticat
 └─────────────────────┘                       └─────────┬───────────┘
                                                         │
                               ┌─────────────────────────┼─────────────────────────┐
-                              ▼                         ▼                         ▼
-                    ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
-                    │  MongoDB Atlas   │    │  Gmail SMTP      │    │  Razorpay        │
-                    │  (Mongoose ODM)  │    │  (OTP emails)    │    │  (payments)      │
-                    └──────────────────┘    └──────────────────┘    └──────────────────┘
+                              ▼                         ▼
+                    ┌──────────────────┐    ┌──────────────────┐
+                    │  MongoDB Atlas   │    │  Gmail SMTP      │
+                    │  (Mongoose ODM)  │    │  (OTP emails)    │
+                    └──────────────────┘    └──────────────────┘
 ```
 
-**Request flow:** Client → Express API (JWT verified, role checked) → Mongoose models → MongoDB Atlas. OTPs are generated server-side, hashed, stored with 5-minute TTL, and emailed via Nodemailer. Payments are initiated server-side through Razorpay Orders API; the client only completes the authorized checkout.
+**Request flow:** Client → Express API (JWT verified, role checked) → Mongoose models → MongoDB Atlas. OTPs are generated server-side, HMAC-hashed, stored with a 5-minute TTL, and emailed via Nodemailer. COD orders calculate prices from the catalog and reserve stock in a MongoDB transaction.
 
 ---
 
 ## ✨ Features
 
 ### 🔐 Authentication & Authorization
-- **6 Roles:** Admin, Seller, Customer, DeliveryAgent, SupportAgent, MarketingManager
+- **6 role values:** Admin, Seller, Customer, DeliveryAgent, SupportAgent, MarketingManager; public signup is limited to Customer and Seller
 - **6-box email OTP** verification via real Gmail SMTP (5-minute expiry, resend timer)
 - **Unique ID** in `XYZDDMMYYYY` format (role initial + name initials + date of birth)
 - Same email can register for **multiple roles** (compound unique index on `email + role`)
@@ -109,16 +113,16 @@ The project was designed with production concerns in mind: JWT-based authenticat
 - 📷 **AI Visual Search** — upload a product photo, receive similar items ranked by match %
 - 🤖 **HaggleBot** — negotiate price with an AI agent (accept / counter-offer / reject logic)
 - 🎤 **Voice Search** — speech-to-text search with automatic typo correction (`iphon` → `iphone`)
-- 🧠 **AI Perfect Combo** — contextual accessory suggestions (e.g. iPhone → Cover + Adapter + Earbuds)
+- 🧠 **Smart product pairing** — tag-based complementary product suggestions; no external AI model is connected
 - 📈 **AI Price Prediction** widget on product detail pages
 
 ### 🛍️ Shopping Experience
 - Product listing with **sorting & filtering**, wishlist, cart, order tracking
-- Product detail page: **6-slide image gallery, fullscreen view, 3D ±180° rotation**
+- Product detail page: image gallery and rotation UI (client-side presentation)
 - **Side-by-side product comparison**
 - **Price Drop Alerts**, **Recently Viewed** items, **Bundle Offers** (Frequently Bought Together)
 - **Coupon engine:** `MEGA10`, `DIWALI20` + automatic bulk-quantity discounts
-- **Flexible payments:** COD, EMI plans (8% interest; 3/6/9/12/24-month tenures on high-value items)
+- **Payments:** COD checkout through the order API; EMI calculations are UI-only and no payment provider is integrated
 - Return / Exchange / Cancel flows with reason capture
 - Multiple saved delivery addresses (address book)
 - 🎡 **Lucky Spin Wheel** promotional widget on the landing page
@@ -126,21 +130,19 @@ The project was designed with production concerns in mind: JWT-based authenticat
 - 🎁 **Refer & Earn** — referral code `RUBEL100`, Rs.100 credit per successful referral
 
 ### 📦 Order Management
-- Order history with live status badges (placed → shipped → out for delivery → delivered)
-- 🗺️ **Live Delivery Map** — animated rider position tracking from warehouse to customer
-- 🧾 **GST Invoice** — business invoices with company name + 15-character GSTIN validation, CGST/SGST tax split, Print / Save-as-PDF
+- Order placement persists to MongoDB; order history and cancel/return actions currently use browser storage
+- 🗺️ **Delivery Map** — presentation-only animation; no courier location feed is connected
+- 🧾 **GST Invoice** — client-side invoice generator; tax/business details are not validated against a tax service
 - 🎥 **Video Unboxing Reviews** — customers can upload video reviews (up to 50MB)
 
 ### 🏪 Seller Panel
-- Full product CRUD (create, read, update, delete)
-- ⚠️ **Low-stock alerts** with browser push notifications + one-tap restock action
-- 📥 **Bulk CSV import** with a downloadable CSV template for correct formatting
-- 💬 **Seller Live Chat** — customer conversation inbox with reply interface
-- Real product photo uploads via Multer (`/api/upload`)
+- Product API supports create, stock update, and delete with seller ownership checks
+- Low-stock alerts, CSV import, and seller chat are currently UI prototypes
+- Product image/video upload endpoints are available through Multer
 
 ### 💳 Payments
-- **Razorpay** payment gateway integration (test mode `rzp_test_...`; production keys after KYC)
-- EMI plan calculator, Cash on Delivery (COD) support
+- Cash on Delivery is the only implemented checkout method
+- EMI and gateway-payment screens are not connected to a payment provider
 
 ### 👨‍💻 HR Showcase (`/for-hr`)
 - System architecture diagram (Vercel → Render → MongoDB Atlas)
@@ -163,7 +165,7 @@ The project was designed with production concerns in mind: JWT-based authenticat
 | Backend | Node.js (≥18), Express.js, Multer (file uploads) |
 | Database | MongoDB Atlas, Mongoose ODM |
 | Authentication | JSON Web Tokens, Nodemailer (Gmail App Password), 6-digit OTP |
-| Payments | Razorpay Orders API |
+| Payments | Cash on Delivery; no payment gateway |
 | Hosting | Vercel (frontend), Render (backend) |
 | Version Control | Git, GitHub |
 | Dev Environment | Termux on Android, GitHub Codespaces |
@@ -176,8 +178,8 @@ The project was designed with production concerns in mind: JWT-based authenticat
 |---|---|---|
 | `users` | All role accounts | `name`, `email`, `role`, `uniqueId` (XYZDDMMYYYY), `passwordHash`; compound unique index on `email + role` |
 | `otps` | Email verification codes | `email`, `otpHash`, `purpose` (register/reset), `expiresAt` (TTL 5 min) |
-| `products` | Catalog | `title`, `price`, `mrp`, `category`, `images[]`, `stock`, `sellerId`, `rating` |
-| `orders` | Purchases | `customerId`, `items[]`, `total`, `paymentMethod`, `status`, `address`, `timeline[]` |
+| `products` | Catalog | `name`, `price`, `category`, `image`, `stock`, `sellerId` |
+| `orders` | Purchases | `customerId`, `customerEmail`, `items[]`, `total`, `status`, `address` |
 | `reviews` | Ratings + video reviews | `productId`, `customerId`, `rating`, `text`, `videoUrl` |
 | `coupons` | Discount codes | `code`, `percentOff`, `minOrder`, `expiresAt` |
 | `referrals` | Refer & Earn ledger | `referrerId`, `referredEmail`, `bonusCredited`, `status` |
@@ -219,7 +221,7 @@ npm install
 cp .env.example .env   # then fill in your values (see table below)
 npm start
 ```
-Backend runs on `http://localhost:5000`
+Backend runs on `http://localhost:10000` by default
 
 **3. Frontend setup**
 ```bash
@@ -244,9 +246,9 @@ Create a `.env` file inside the `server/` folder (see `.env.example` for the tem
 | `RAZORPAY_KEY_ID` | ⚪ | Razorpay key ID (payments only) | `rzp_test_xxxxxxxx` |
 | `RAZORPAY_KEY_SECRET` | ⚪ | Razorpay key secret (payments only) | `xxxxxxxxxxxxxxxx` |
 | `PORT` | ⚪ | Backend port (Render assigns automatically) | `5000` |
-| `CLIENT_URL` | ✅ | Frontend origin allowed by CORS | `https://enterprise-ai-powered-smart-gadget-neon.vercel.app` |
+| `CLIENT_URL` | ✅ | Comma-separated frontend origins allowed by CORS | `http://localhost:5173` |
 
-> ⚠️ **Never commit `.env` to GitHub.** It is already covered by `.gitignore`. Generate a Gmail App Password at Google Account → Security → 2-Step Verification → App passwords.
+> **Never commit `.env` to GitHub.** If a real secret was committed previously, rotate it; adding it to `.gitignore` does not erase it from Git history. Generate a Gmail App Password at Google Account → Security → 2-Step Verification → App passwords.
 
 ---
 
@@ -328,9 +330,8 @@ Base URL (production): `https://enterprise-ai-powered-smartgadget.onrender.com`
 ### Auth
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| POST | `/api/auth/register` | Register account, triggers OTP email | Public |
-| POST | `/api/auth/verify-otp` | Verify 6-digit OTP, activates account | Public |
-| POST | `/api/auth/resend-otp` | Resend OTP (rate-limited) | Public |
+| POST | `/api/auth/send-otp` | Send registration OTP | Public |
+| POST | `/api/auth/register` | Register with a valid OTP | Public |
 | POST | `/api/auth/login` | Login with email or Unique ID | Public |
 | POST | `/api/auth/forgot-password` | Request password-reset OTP | Public |
 | POST | `/api/auth/reset-password` | Set new password with valid OTP | Public |
@@ -338,30 +339,26 @@ Base URL (production): `https://enterprise-ai-powered-smartgadget.onrender.com`
 ### Products
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| GET | `/api/products/all?search=&category=&sort=&limit=` | List/search/filter products | Public |
-| GET | `/api/products/:id` | Product detail | Public |
-| POST | `/api/products` | Create product | Seller, Admin |
-| PUT | `/api/products/:id` | Update product | Seller (own), Admin |
-| DELETE | `/api/products/:id` | Delete product | Seller (own), Admin |
-| POST | `/api/products/bulk-upload` | CSV bulk import | Seller, Admin |
+| GET | `/api/product/all?search=&category=&sort=&limit=` | List/search/filter products | Public |
+| GET | `/api/product/:id` | Product detail | Public |
+| GET | `/api/product/combo/:id` | Related products | Public |
+| POST | `/api/product/add` | Create product | Seller, Admin |
+| PUT | `/api/product/stock/:id` | Update stock | Seller (own), Admin |
+| DELETE | `/api/product/:id` | Delete product | Seller (own), Admin |
+| POST | `/api/product/seed` | Fill catalog to the 150-product minimum | Admin |
 
 ### Orders
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| POST | `/api/orders` | Place order | Customer |
-| GET | `/api/orders/my` | Authenticated user's order history | Customer |
-| GET | `/api/orders/:id` | Order detail with timeline | Owner, Admin |
-| POST | `/api/orders/:id/cancel` | Cancel with reason | Owner |
-| POST | `/api/orders/:id/return` | Request return/exchange | Owner |
-| PATCH | `/api/orders/:id/status` | Update fulfilment status | Admin, DeliveryAgent |
+| POST | `/api/order/create` | Place a COD order; server recalculates totals and reserves stock | Customer |
+| GET | `/api/order/my/:email` | Fetch authenticated customer's orders | Customer |
+| PUT | `/api/order/status/:id` | Update order status | Admin, DeliveryAgent |
 
 ### Uploads & Payments
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| POST | `/api/upload/photo` | Upload product image (Multer) | Seller, Admin |
-| POST | `/api/upload/review-video` | Upload video review (≤50MB) | Customer |
-| POST | `/api/payment/razorpay/order` | Create Razorpay order (server-side) | Customer |
-| POST | `/api/payment/razorpay/verify` | Verify payment signature | Customer |
+| POST | `/api/upload/product-photo` | Upload image (≤5MB) | Public |
+| POST | `/api/upload/review-video` | Upload video (≤50MB) | Public |
 
 ---
 
@@ -387,9 +384,9 @@ Base URL (production): `https://enterprise-ai-powered-smartgadget.onrender.com`
 
 ## 🧪 Testing
 
-- **Manual QA checklist:** register → OTP verify → login → add to cart → apply coupon → checkout (COD) → track on live map → download GST invoice → request return
-- **Seller flow:** create product → upload photo → CSV bulk import → respond in live chat → receive low-stock alert
-- **API testing:** all endpoints above were verified with request/response inspection during development
+- **Automated tests:** not configured yet (`client` and `server` packages have no test scripts).
+- **Available checks:** client production build (`cd client && npm run build`) and backend syntax check (`node --check server/src/server.js`).
+- **Manual verification needed:** configure MongoDB and email credentials, then test registration, login, product creation, stock contention, and COD checkout end to end.
 
 ---
 
@@ -413,12 +410,12 @@ Base URL (production): `https://enterprise-ai-powered-smartgadget.onrender.com`
 
 ## 🗺️ Roadmap
 
-- [ ] Razorpay **production** keys after KYC completion
+- [ ] Integrate and test a payment provider with server-side signature verification
 - [ ] Seller-uploaded product photography pipeline (upload infra already in place)
 - [ ] Web-push notifications via service worker
 - [ ] Multi-language UI (Bengali / Hindi / English)
-- [ ] Admin analytics dashboard with sales charts
-- [ ] Automated test suite (Jest + React Testing Library, Supertest)
+- [ ] Connect seller/admin dashboards and order history to authenticated APIs
+- [ ] Add automated tests (React Testing Library and Supertest)
 
 ---
 

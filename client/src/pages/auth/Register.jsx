@@ -13,7 +13,7 @@ export default function Register(){
     <div style={{display:'flex',justifyContent:'space-between'}}><h2>📝 Register</h2><button type="button" onClick={()=>setDark(!dark)} style={{padding:'6px 12px',borderRadius:15,border:'none'}}>{dark?'☀️':'🌙'}</button></div>
     <div className="step-dots"><div className={'step-dot '+(step>=1?'done':'')}>1</div><div className={'step-dot '+(step===2?'active':step>2?'done':'')}>2</div><div className={'step-dot '+(step===3?'done':'')}>3</div></div>
     <div style={{fontSize:11,textAlign:'center',opacity:.6}}>Step {step}: {step===1?'Details':step===2?'Verify OTP':'Done'} | {date}</div>
-    {step===1&&<><select className="auth-input" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="">Select your role</option>{['Admin','Seller','Customer','DeliveryAgent','SupportAgent','MarketingManager'].map(r=><option key={r} value={r}>{r}</option>)}</select>
+    {step===1&&<><select className="auth-input" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="">Select your role</option>{['Customer','Seller'].map(r=><option key={r} value={r}>{r}</option>)}</select>
     <input className="auth-input" placeholder="Full Name" value={f.fullName} onChange={e=>setF({...f,fullName:e.target.value})} required/>
     <input className="auth-input" placeholder="Email" value={f.email} onChange={e=>setF({...f,email:e.target.value})} required/>
     <input className="auth-input" placeholder="Contact" value={f.contact} onChange={e=>setF({...f,contact:e.target.value})} required/>

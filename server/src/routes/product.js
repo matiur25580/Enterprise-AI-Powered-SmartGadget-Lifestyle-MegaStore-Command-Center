@@ -1,17 +1,37 @@
 const express=require('express');const Product=require('../models/Product');
+const mongoose=require('mongoose');
+const {protect,allow}=require('../middleware/auth');
 const router=express.Router();
-router.post('/add',async(req,res)=>{try{const p=await Product.create(req.body);res.json({success:true,message:'Product added successfully',product:p})}catch(e){res.status(500).json({success:false,message:e.message})}});
+router.post('/add',protect,allow('Admin','Seller'),async(req,res)=>{try{
+  const {name,category,subcategory,price,stock,brand,comboTags,image}=req.body;
+  const p=await Product.create({name,category,subcategory,price,stock,brand,comboTags,image,sellerId:req.user.id});
+  res.json({success:true,message:'Product added successfully',product:p});
+}catch(e){res.status(400).json({success:false,message:e.message})}});
 router.get('/all',async(req,res)=>{
   try{
     const {category,search,minPrice,maxPrice,sort='createdAt',order='desc',page=1,limit=20}=req.query;
+    const sortField=['createdAt','price','name','rating'].includes(sort)?sort:'createdAt';
+    const pageNumber=Math.max(1,Number.parseInt(page,10)||1);
+    const pageSize=Math.min(60,Math.max(1,Number.parseInt(limit,10)||20));
     let q={};
     if(category && category!=='all') q.category=category;
-    if(search) q.name={$regex:search,$options:'i'};
-    if(minPrice||maxPrice) q.price={...(minPrice?{$gte:Number(minPrice)}:{}),...(maxPrice?{$lte:Number(maxPrice)}:{})};
-    const skip=(Number(page)-1)*Number(limit);
+    if(search) q.name={$regex:search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),$options:'i'};
+    const minimum=minPrice===''||minPrice===undefined?undefined:Number(minPrice);
+    const maximum=maxPrice===''||maxPrice===undefined?undefined:Number(maxPrice);
+    if((minimum!==undefined&&!Number.isFinite(minimum))||(maximum!==undefined&&!Number.isFinite(maximum)))return res.status(400).json({success:false,message:'Price filters must be valid numbers'});
+    if(minimum!==undefined||maximum!==undefined) q.price={...(minimum!==undefined?{$gte:minimum}:{}),...(maximum!==undefined?{$lte:maximum}:{})};
+    const skip=(pageNumber-1)*pageSize;
     const total=await Product.countDocuments(q);
-    const list=await Product.find(q).sort({[sort]:order==='asc'?1:-1}).skip(skip).limit(Number(limit));
-    res.json({success:true,message:'Products fetched successfully',total,pages:Math.ceil(total/limit),page:Number(page),products:list});
+    const list=await Product.find(q).sort({[sortField]:order==='asc'?1:-1}).skip(skip).limit(pageSize);
+    res.json({success:true,message:'Products fetched successfully',total,pages:Math.ceil(total/pageSize),page:pageNumber,products:list});
+  }catch(e){res.status(500).json({success:false,message:e.message})}
+});
+router.get('/:id',async(req,res)=>{
+  if(!mongoose.isValidObjectId(req.params.id))return res.status(400).json({success:false,message:'Invalid product id'});
+  try{
+    const product=await Product.findById(req.params.id);
+    if(!product)return res.status(404).json({success:false,message:'Product not found'});
+    res.json({success:true,product});
   }catch(e){res.status(500).json({success:false,message:e.message})}
 });
 router.get('/combo/:id',async(req,res)=>{
@@ -20,26 +40,52 @@ router.get('/combo/:id',async(req,res)=>{
   res.json({success:true,message:'Perfect combo found successfully',main:main.name,perfect});}
   catch(e){res.status(500).json({success:false,message:e.message})}
 });
-router.put('/stock/:id',async(req,res)=>{try{const p=await Product.findByIdAndUpdate(req.params.id,{stock:req.body.stock},{new:true});res.json({success:true,message:'Stock updated successfully',product:p})}catch(e){res.status(500).json({success:false,message:e.message})}});
-router.delete('/:id',async(req,res)=>{try{await Product.findByIdAndDelete(req.params.id);res.json({success:true,message:'Product deleted successfully'})}catch(e){res.status(500).json({success:false,message:e.message})}});
-router.post('/seed',async(req,res)=>{try{
-  await Product.deleteMany({});
+router.put('/stock/:id',protect,allow('Admin','Seller'),async(req,res)=>{try{
+  const filter={_id:req.params.id};if(req.user.role!=='Admin')filter.sellerId=req.user.id;
+  const p=await Product.findOneAndUpdate(filter,{stock:Number(req.body.stock)},{new:true,runValidators:true});
+  if(!p)return res.status(404).json({success:false,message:'Product not found'});
+  res.json({success:true,message:'Stock updated successfully',product:p});
+}catch(e){res.status(400).json({success:false,message:e.message})}});
+router.delete('/:id',protect,allow('Admin','Seller'),async(req,res)=>{try{
+  const filter={_id:req.params.id};if(req.user.role!=='Admin')filter.sellerId=req.user.id;
+  const p=await Product.findOneAndDelete(filter);if(!p)return res.status(404).json({success:false,message:'Product not found'});
+  res.json({success:true,message:'Product deleted successfully'});
+}catch(e){res.status(400).json({success:false,message:e.message})}});
+router.post('/seed',protect,allow('Admin'),async(req,res)=>{try{
+  const existingCount=await Product.countDocuments();
+  if(existingCount>=150)return res.json({success:true,message:'Catalog already meets the minimum size',count:existingCount});
   const demo=[
-    {name:'iPhone 15',category:'Mobile',subcategory:'iPhone',price:79900,stock:20,brand:'【entity-Apple¦canonical_name=Apple】',comboTags:['iphone','cover','adapter']},
-    {name:'【entity-Samsung¦canonical_name=Samsung】 Galaxy A55',category:'Mobile',subcategory:'Android Phone',price:39999,stock:30,brand:'【entity-Samsung¦canonical_name=Samsung】',comboTags:['android','cover','charger']},
-    {name:'【entity-Nokia¦canonical_name=Nokia】 110 Button Phone',category:'Mobile',subcategory:'Button Phone',price:1999,stock:100,brand:'【entity-Nokia¦canonical_name=Nokia】',comboTags:['buttonphone','charger']},
-    {name:'AirPods Pro',category:'AudioPower',subcategory:'Earbuds',price:24900,stock:40,brand:'【entity-Apple¦canonical_name=Apple】',comboTags:['iphone','earbuds']},
-    {name:'20W Adapter',category:'AudioPower',subcategory:'Adapter',price:1999,stock:80,brand:'【entity-Apple¦canonical_name=Apple】',comboTags:['iphone','adapter']},
-    {name:'Type-C Cable 1M',category:'AudioPower',subcategory:'Charging Cable',price:799,stock:150,brand:'【entity-boAt¦canonical_name=boAt】',comboTags:['cable','charger']},
+    {name:'iPhone 15',category:'Mobile',subcategory:'iPhone',price:79900,stock:20,brand:'Apple',comboTags:['iphone','cover','adapter']},
+    {name:'Samsung Galaxy A55',category:'Mobile',subcategory:'Android Phone',price:39999,stock:30,brand:'Samsung',comboTags:['android','cover','charger']},
+    {name:'Nokia 110 Button Phone',category:'Mobile',subcategory:'Button Phone',price:1999,stock:100,brand:'Nokia',comboTags:['buttonphone','charger']},
+    {name:'AirPods Pro',category:'AudioPower',subcategory:'Earbuds',price:24900,stock:40,brand:'Apple',comboTags:['iphone','earbuds']},
+    {name:'20W Adapter',category:'AudioPower',subcategory:'Adapter',price:1999,stock:80,brand:'Apple',comboTags:['iphone','adapter']},
+    {name:'Type-C Cable 1M',category:'AudioPower',subcategory:'Charging Cable',price:799,stock:150,brand:'boAt',comboTags:['cable','charger']},
     {name:'65W Laptop Charger',category:'Computing',subcategory:'Laptop Charger',price:2499,stock:60,brand:'HP',comboTags:['laptop','charger']},
     {name:'HP Laptop 15s',category:'Computing',subcategory:'Laptop',price:55990,stock:15,brand:'HP',comboTags:['laptop','pendrive']},
     {name:'Pendrive 128GB',category:'Storage',subcategory:'Pendrive',price:1299,stock:200,brand:'SanDisk',comboTags:['laptop','pendrive']},
-    {name:'Memory Card 64GB',category:'Storage',subcategory:'Memory Card',price:899,stock:180,brand:'【entity-Samsung¦canonical_name=Samsung】',comboTags:['android','memorycard']},
+    {name:'Memory Card 64GB',category:'Storage',subcategory:'Memory Card',price:899,stock:180,brand:'Samsung',comboTags:['android','memorycard']},
     {name:'iPhone Cover',category:'Protection',subcategory:'Mobile Cover',price:999,stock:120,brand:'Spigen',comboTags:['iphone','cover']},
     {name:'Aviator Sunglasses',category:'Lifestyle',subcategory:'Sunglasses',price:1999,stock:70,brand:'RayBan',comboTags:['sunglasses']},
     {name:'Leather Belt',category:'Lifestyle',subcategory:'Belt',price:899,stock:90,brand:'Woodland',comboTags:['belt']},
     {name:'Eye Glasses Bluecut',category:'Lifestyle',subcategory:'Eye Glasses',price:1499,stock:50,brand:'Lenskart',comboTags:['eyeglasses']},
   ];
-  await Product.insertMany(demo);res.json({success:true,message:'Seeded successfully',count:demo.length});
+  if(existingCount===0)await Product.insertMany(demo);
+  const source=await Product.find().limit(50).lean();
+  if(!source.length)return res.status(400).json({success:false,message:'Add at least one product before expanding the catalog'});
+  const startingCount=existingCount||demo.length;
+  const variantNames=['Midnight','Ocean Blue','Silver','Graphite','Forest Green','Rose'];
+  const additions=Array.from({length:150-startingCount},(_,index)=>{
+    const base=source[index%source.length];
+    const edition=Math.floor(index/source.length)+1;
+    return {
+      name:`${base.name} ${variantNames[index%variantNames.length]} Edition ${edition}`,
+      category:base.category,subcategory:base.subcategory,brand:base.brand,
+      price:Math.max(99,Math.round(Number(base.price)*(.9+(index%13)/100))),
+      stock:Math.max(0,Number(base.stock)||0),comboTags:base.comboTags||[],image:base.image
+    };
+  });
+  await Product.insertMany(additions);
+  res.json({success:true,message:'Catalog expanded to the 150-product minimum',count:startingCount+additions.length});
 }catch(e){res.status(500).json({success:false,message:e.message})}});
 module.exports=router;

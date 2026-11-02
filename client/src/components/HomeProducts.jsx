@@ -1,61 +1,99 @@
-import {useState,useEffect} from 'react';
+import {useEffect,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {useStore} from '../context/StoreContext.jsx';
 const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
-const DETAIL='/product';
-function disc(p){if(!p.mrp||p.mrp<=p.price)return 0;return Math.round((p.mrp-p.price)/p.mrp*100);}
+const PAGE_SIZE=50;
+const MIN_PRODUCTS=150;
+const MAX_PRODUCTS=300;
 function fmt(n){return 'Rs.'+Number(n||0).toLocaleString('en-IN');}
-const cardSt={minWidth:150,width:150,background:'#212122',border:'1px solid #353839',borderRadius:10,overflow:'hidden',cursor:'pointer',flexShrink:0};
-function PCard({p}){
+function getPair(product,items){
+  if(!product.comboTags?.length)return null;
+  return items.filter(item=>item._id!==product._id&&item.comboTags?.some(tag=>product.comboTags.includes(tag)))
+    .sort((a,b)=>b.comboTags.filter(tag=>product.comboTags.includes(tag)).length-a.comboTags.filter(tag=>product.comboTags.includes(tag)).length)[0]||null;
+}
+function PCard({product,items}){
   const nav=useNavigate();
-  const d=disc(p);
-  const img=p.images&&p.images[0];
-  const ok=img&&(img.indexOf('http')===0||img.indexOf('/')===0);
+  const {addCart,toggleWish,wish}=useStore();
+  const pair=getPair(product,items);
+  const saved=wish.some(item=>item._id===product._id);
+  const image=product.image;
+  const hasImage=image&&(image.startsWith('http')||image.startsWith('/'));
+  const openProduct=()=>nav('/product/'+product._id);
   return(
-    <div style={cardSt} onClick={()=>nav(DETAIL+'/'+p._id)}>
-      <div style={{height:120,background:'#060606',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
-        {ok?<img src={img} alt={p.title} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:40}}>&#128230;</span>}
-      </div>
-      <div style={{padding:8}}>
-        <div style={{fontSize:12,color:'#e6edf3',height:32,overflow:'hidden'}}>{p.title}</div>
-        <div style={{display:'flex',alignItems:'center',gap:6,marginTop:4}}>
-          {p.rating?<span style={{background:'#238636',color:'#fff',fontSize:11,padding:'1px 6px',borderRadius:4}}>{p.rating} &#9733;</span>:null}
-          {d>0?<span style={{color:'#3fb950',fontSize:11}}>{d}% off</span>:null}
+    <article className="catalog-card">
+      <button type="button" className="catalog-image" onClick={openProduct} aria-label={`View ${product.name}`}>
+        {hasImage?<img src={image} alt={product.name}/>:<span aria-hidden="true">&#128230;</span>}
+      </button>
+      <div className="catalog-card-body">
+        <span className="catalog-category">{product.category}</span>
+        <button type="button" className="catalog-title" onClick={openProduct}>{product.name}</button>
+        <div className="catalog-price">{fmt(product.price)}</div>
+        <div className={product.stock>0?'catalog-stock':'catalog-stock catalog-out'}>{product.stock>0?`${product.stock} in stock`:'Out of stock'}</div>
+        {pair&&<div className="catalog-pair"><span>Suggested pairing</span><small>{pair.name}</small><button type="button" disabled={!product.stock||!pair.stock} onClick={()=>{addCart(product);addCart(pair)}}>Add both · {fmt(Number(product.price)+Number(pair.price))}</button></div>}
+        <div className="catalog-actions">
+          <button type="button" disabled={!product.stock} onClick={()=>addCart(product)}>Add to cart</button>
+          <button type="button" className={saved?'catalog-saved':''} aria-label={saved?'Remove from wishlist':'Add to wishlist'} onClick={()=>toggleWish(product)}>{saved?'Saved':'Wishlist'}</button>
         </div>
-        <div style={{marginTop:4}}>
-          <b style={{color:'#e6edf3',fontSize:14}}>{fmt(p.price)}</b>
-          {p.mrp>p.price?<span style={{color:'#8b949e',fontSize:11,marginLeft:6}}><s>{fmt(p.mrp)}</s></span>:null}
-        </div>
       </div>
-    </div>
+    </article>
   );
 }
-function Section({title,items}){
-  if(!items||!items.length)return null;
-  return(
-    <div style={{marginTop:18,padding:'0 12px'}}>
-      <b style={{color:'#e6edf3',fontSize:16}}>{title}</b>
-      <div style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:6,marginTop:8}}>
-        {items.map(p=><PCard key={p._id} p={p}/>)}
-      </div>
-    </div>
-  );
+async function fetchPage(page){
+  const response=await fetch(`${API}/api/product/all?page=${page}&limit=${PAGE_SIZE}`);
+  if(!response.ok)throw new Error('Product catalog could not be loaded');
+  return response.json();
 }
 export default function HomeProducts(){
   const [items,setItems]=useState([]);
+  const [total,setTotal]=useState(0);
+  const [nextPage,setNextPage]=useState(4);
+  const [loading,setLoading]=useState(true);
+  const [loadingMore,setLoadingMore]=useState(false);
+  const [seeding,setSeeding]=useState(false);
+  const [error,setError]=useState('');
+  const [auth]=useState(()=>{try{return JSON.parse(localStorage.getItem('ms_auth')||'null')}catch{return null}});
   useEffect(()=>{
-    fetch(API+'/api/products/all?limit=60').then(r=>r.json()).then(d=>{
-      const a=d.products||d.data||d;
-      setItems(Array.isArray(a)?a:[]);
-    }).catch(()=>{});
+    let active=true;
+    Promise.all([1,2,3].map(fetchPage)).then(pages=>{
+      if(!active)return;
+      setItems(pages.flatMap(page=>page.products||[]).slice(0,MIN_PRODUCTS));
+      setTotal(pages[0]?.total||0);
+    }).catch(()=>{if(active)setError('Products could not be loaded. Please try again later.')})
+      .finally(()=>{if(active)setLoading(false)});
+    return()=>{active=false};
   },[]);
-  if(!items.length)return null;
-  const deals=[...items].sort((a,b)=>disc(b)-disc(a)).slice(0,10);
-  const fresh=[...items].reverse().slice(0,10);
+  const loadMore=async()=>{
+    if(loadingMore||items.length>=MAX_PRODUCTS||items.length>=total)return;
+    setLoadingMore(true);setError('');
+    try{
+      const page=await fetchPage(nextPage);
+      setItems(current=>[...current,...(page.products||[])].slice(0,MAX_PRODUCTS));
+      setTotal(page.total||total);setNextPage(current=>current+1);
+    }catch{setError('More products could not be loaded. Please try again.')}
+    finally{setLoadingMore(false)}
+  };
+  const seedCatalog=async()=>{
+    setSeeding(true);setError('');
+    try{
+      const response=await fetch(`${API}/api/product/seed`,{method:'POST',headers:{Authorization:`Bearer ${auth.token}`}});
+      const result=await response.json();
+      if(!response.ok||!result.success)throw new Error(result.message||'Catalog setup failed');
+      const pages=await Promise.all([1,2,3].map(fetchPage));
+      setItems(pages.flatMap(page=>page.products||[]).slice(0,MIN_PRODUCTS));
+      setTotal(pages[0]?.total||0);setNextPage(4);
+    }catch(err){setError(err.message||'Catalog setup failed. Please try again.')}
+    finally{setSeeding(false)}
+  };
+  if(loading)return <p className="catalog-state" role="status">Loading products...</p>;
+  if(error&&!items.length)return <p className="catalog-state" role="alert">{error}</p>;
+  if(!items.length)return <section className="catalog-section"><p className="catalog-state">No products are available yet.</p>{auth?.role==='Admin'&&auth?.token&&<button type="button" className="catalog-load-more" disabled={seeding} onClick={seedCatalog}>{seeding?'Preparing catalog...':'Populate starter catalog'}</button>}</section>;
   return(
-    <div style={{paddingBottom:24}}>
-      <Section title="Suggested For You" items={items.slice(0,10)}/>
-      <Section title="Top Discounts" items={deals}/>
-      <Section title="New Arrivals" items={fresh}/>
-    </div>
+    <section className="catalog-section" aria-labelledby="catalog-heading">
+      <div className="catalog-heading-row"><div><h2 id="catalog-heading">Shop the catalog</h2><p>{items.length} of {Math.min(total,MAX_PRODUCTS)} products</p></div></div>
+      <div className="catalog-grid">{items.map(product=><PCard key={product._id} product={product} items={items}/>)}</div>
+      {error&&<p role="alert" className="catalog-state">{error}</p>}
+      {total<MIN_PRODUCTS&&auth?.role==='Admin'&&auth?.token&&<button type="button" className="catalog-load-more" disabled={seeding} onClick={seedCatalog}>{seeding?'Preparing catalog...':'Populate starter catalog'}</button>}
+      {items.length<Math.min(total,MAX_PRODUCTS)&&<button type="button" className="catalog-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore?'Loading...':'Load more products'}</button>}
+    </section>
   );
 }

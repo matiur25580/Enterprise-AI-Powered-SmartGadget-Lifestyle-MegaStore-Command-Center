@@ -4,8 +4,9 @@ const productSchema=new mongoose.Schema({
   category:{type:String,enum:['Mobile','AudioPower','Protection','Storage','Computing','Lifestyle'],required:true},
   subcategory:String, // Button Phone, iPhone, Earbuds, Charger etc
   price:{type:Number,required:true},
-  stock:Number,
+  stock:{type:Number,min:0,default:0},
   brand:String,
+  sellerId:{type:mongoose.Schema.Types.ObjectId,ref:'User'},
   comboTags:[String], // ["iphone","cover","charger"] - AI matching er jonno
   rating:{type:Number,default:4.5},
   image:String,

@@ -8,7 +8,7 @@ export default function Orders(){
     {orders.length===0?<p style={{textAlign:'center',padding:40}}>No orders yet. <Link to="/shop">Start shopping</Link></p>:
     orders.map(o=><div key={o.id} style={{border:'1px solid #ddd',borderRadius:10,padding:15,margin:'12px 0'}}>
       <div style={{display:'flex',justifyContent:'space-between'}}><b>#{o.id}</b><span style={{background:o.status.includes('Cancel')?'#ffebee':o.status.includes('Return')?'#fff3e0':'#e8f5e9',padding:'4px 10px',borderRadius:12,fontSize:12}}>{o.status}</span></div>
-      <div style={{fontSize:13,opacity:.7}}>{o.date} | 📍 {o.addr?.label}</div>
+      <div style={{fontSize:13,opacity:.7}}>{o.date} | 📍 {typeof o.addr==='string'?o.addr:o.addr?.label||'Address not available'}</div>
       <div style={{margin:'8px 0'}}>{o.items.map((p,i)=><span key={i} style={{background:'#f5f5f5',padding:'4px 8px',borderRadius:6,margin:2,display:'inline-block',fontSize:12}}>{p.name}</span>)}</div>
       {!o.status.includes('Cancel')&&!o.status.includes('Return')&&<div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
         <button onClick={()=>cancel(o.id)} style={{padding:'6px 12px',background:'#f44336',color:'#fff',border:'none',borderRadius:6}}>Cancel Order ✕</button>

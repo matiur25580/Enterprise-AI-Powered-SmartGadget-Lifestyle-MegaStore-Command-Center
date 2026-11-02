@@ -4,13 +4,12 @@ import ShopWrapper from './pages/shop/ShopWrapper.jsx';import Checkout from './p
 import Wishlist from './pages/shop/Wishlist.jsx';import Orders from './pages/shop/Orders.jsx';import AddressBook from './pages/shop/AddressBook.jsx';
 import Terms from './pages/shop/Terms.jsx';import Settings from './pages/shop/Settings.jsx';
 import SellerDashboard from './pages/seller/SellerDashboard.jsx';import AdminDashboard from './pages/admin/AdminDashboard.jsx';
-import ProductDetail from './pages/shop/ProductDetail.jsx';
+import ProductDetail from './pages/shop/ProductDetailLive.jsx';
 import ApiDocs from './pages/shop/ApiDocs.jsx';
 import BulkUpload from './pages/seller/BulkUpload.jsx';
 import HRShowcase from './pages/hr/HRShowcase.jsx';
-import SupportChat from './components/SupportChat.jsx';import NotifyCenter from './components/NotifyCenter.jsx';import OfferZone from './components/OfferZone.jsx';import DeliveryTrack from './components/DeliveryTrack.jsx';
+import SupportChat from './components/SupportChat.jsx';import NotifyCenter from './components/NotifyCenter.jsx';import OfferZone from './components/OfferZone.jsx';
 import {StoreProvider,useStore} from './context/StoreContext.jsx';import {useThemeDate} from './pages/auth/AuthLayout.jsx';
-import SpinWheel from './components/SpinWheel.jsx';import Referral from './components/Referral.jsx';
 import HomeProducts from './components/HomeProducts.jsx';
 function Nav(){
   const {cart,wish}=useStore();const {date,time}=useThemeDate();
@@ -25,13 +24,20 @@ function Nav(){
   </nav><NotifyCenter/></>);
 }
 function Landing(){
-  return (<div style={{minHeight:'80vh',background:'#060606',color:'#fff',padding:40,textAlign:'center'}}>
-    <OfferZone/><h1 style={{fontSize:50,marginTop:20}}>🛒 MegaStore Enterprise</h1><p>⭐ 4.8/5 | 🔥 Sale Live | 🚚 Free Delivery</p>
-    <div style={{marginTop:20}}><Link to="/shop" style={{background:'#00e676',color:'#000',padding:'12px 26px',borderRadius:20,margin:5,textDecoration:'none',fontWeight:'bold'}}>Shop Now 🛍️</Link>
-    <Link to="/for-hr" style={{background:'#212122',color:'#58a6ff',border:'1px solid #353839',padding:'12px 26px',borderRadius:20,margin:5,textDecoration:'none',fontWeight:'bold'}}>👨‍💻 For HR</Link><div style={{maxWidth:720,margin:"18px auto"}}><SpinWheel/><Referral/></div></div>
-      <HomeProducts />
-    <div style={{marginTop:20}}><DeliveryTrack status="Shipped"/></div>
-  </div>);
+  return (<main style={{minHeight:'100vh',background:'#060606',color:'#fff'}}>
+    <section style={{padding:'64px 24px 40px',borderBottom:'1px solid #353839'}}>
+      <div style={{maxWidth:1100,margin:'0 auto'}}>
+        <p style={{color:'#00e676',fontSize:12,fontWeight:700,letterSpacing:2}}>MEGASTORE / EVERYDAY COMMERCE</p>
+        <h1 style={{fontSize:48,lineHeight:1.08,maxWidth:720,margin:'18px 0'}}>Useful tech and lifestyle, in one place.</h1>
+        <p style={{maxWidth:600,color:'#b7c0c8',lineHeight:1.6}}>Browse the live catalog, check current stock, and place a cash-on-delivery order.</p>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap',marginTop:24}}>
+          <Link to="/shop" style={{background:'#00e676',color:'#000',padding:'12px 20px',borderRadius:6,textDecoration:'none',fontWeight:700}}>Browse products</Link>
+          <Link to="/for-hr" style={{background:'transparent',color:'#fff',border:'1px solid #555',padding:'12px 20px',borderRadius:6,textDecoration:'none'}}>Project overview</Link>
+        </div>
+      </div>
+    </section>
+    <div style={{maxWidth:1120,margin:'0 auto',paddingTop:20}}><HomeProducts/></div>
+  </main>);
 }
 export default function App(){return (<StoreProvider><BrowserRouter><Nav/>
 <Routes>
