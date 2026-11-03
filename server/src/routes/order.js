@@ -1,6 +1,7 @@
 const express=require('express');const mongoose=require('mongoose');const Order=require('../models/Order');
 const Product=require('../models/Product');const {protect,allow}=require('../middleware/auth');
 const {validate,orderRules}=require('../middleware/validate');
+const {body}=require('express-validator');
 const router=express.Router();
 router.post('/create',protect,allow('Customer'),orderRules,validate,async(req,res,next)=>{
   let session;
@@ -49,8 +50,9 @@ router.get('/my/:email',protect,allow('Customer'),async(req,res,next)=>{
   res.json({success:true,count:list.length,orders:list});}
   catch(e){next(e)}
 });
-router.put('/status/:id',protect,allow('Admin','DeliveryAgent'),async(req,res,next)=>{
+router.put('/status/:id',protect,allow('Admin','DeliveryAgent'),body('status').isIn(['Pending','Shipped','Delivered','Cancelled']),validate,async(req,res,next)=>{
   try{const o=await Order.findByIdAndUpdate(req.params.id,{status:req.body.status},{new:true});
+  if(!o)return res.status(404).json({success:false,message:'Order not found'});
   res.json({success:true,message:'Order status updated successfully',order:o});}
   catch(e){next(e)}
 });

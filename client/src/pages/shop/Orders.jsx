@@ -1,22 +1,63 @@
-import {Link} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';import {useState} from 'react';
-import LiveMap from '../../components/LiveMap.jsx';import GstInvoice from '../../components/GstInvoice.jsx';
-import ConfirmDialog from '../../components/ConfirmDialog.jsx';
-import {toast} from '../../utils/notifications.jsx';
+import {useEffect,useState} from 'react';
+import {Link} from 'react-router-dom';
+import axios from 'axios';
+import {API} from '../../utils/api.js';
+
+function readAuth(){
+  try{
+    return JSON.parse(localStorage.getItem('ms_auth')||'null');
+  }catch{
+    return null;
+  }
+}
+
 export default function Orders(){
-  const {orders,returnOrder,setOrders}=useStore();const [reason,setReason]=useState({});const [cancelId,setCancelId]=useState(null);
-  const cancel=()=>{setOrders(orders.map(x=>x.id===cancelId?{...x,status:'Cancelled ✓ Refund in 3-5 days'}:x));setCancelId(null);toast.success('Your order has been cancelled.');};
-  return (<div style={{padding:20,maxWidth:900,margin:'0 auto',fontFamily:'sans-serif'}}>
-    <Link to="/shop">← Shop</Link><h2>📦 Order History ({orders.length})</h2><LiveMap/><GstInvoice/>
-    {orders.length===0?<p style={{textAlign:'center',padding:40}}>No orders yet. <Link to="/shop">Start shopping</Link></p>:
-    orders.map(o=><div key={o.id} style={{border:'1px solid #ddd',borderRadius:10,padding:15,margin:'12px 0'}}>
-      <div style={{display:'flex',justifyContent:'space-between'}}><b>#{o.id}</b><span style={{background:o.status.includes('Cancel')?'#ffebee':o.status.includes('Return')?'#fff3e0':'#e8f5e9',padding:'4px 10px',borderRadius:12,fontSize:12}}>{o.status}</span></div>
-      <div style={{fontSize:13,opacity:.7}}>{o.date} | 📍 {typeof o.addr==='string'?o.addr:o.addr?.label||'Address not available'}</div>
-      <div style={{margin:'8px 0'}}>{o.items.map((p,i)=><span key={i} style={{background:'#f5f5f5',padding:'4px 8px',borderRadius:6,margin:2,display:'inline-block',fontSize:12}}>{p.name}</span>)}</div>
-      {!o.status.includes('Cancel')&&!o.status.includes('Return')&&<div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
-        <button onClick={()=>setCancelId(o.id)} style={{padding:'6px 12px',background:'#f44336',color:'#fff',border:'none',borderRadius:6}}>Cancel Order ✕</button>
-        <select value={reason[o.id]||''} onChange={e=>setReason({...reason,[o.id]:e.target.value})} style={{padding:6,borderRadius:6}}><option value="">Return reason...</option><option>Defective</option><option>Wrong item</option><option>Exchange</option></select>
-        <button onClick={()=>reason[o.id]?returnOrder(o.id,reason[o.id]):toast.error('Choose a return reason first.')} style={{padding:'6px 12px',background:'#ff9800',color:'#fff',border:'none',borderRadius:6}}>Return ↩️</button>
-      </div>}
-    </div>)}{cancelId&&<ConfirmDialog title="Cancel this order?" message="Are you sure you want to cancel this order?" confirmLabel="Cancel order" danger onCancel={()=>setCancelId(null)} onConfirm={cancel}/>}
-  </div>);
+  const [orders,setOrders]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState('');
+  const auth=readAuth();
+
+  useEffect(()=>{
+    let active=true;
+    if(!auth?.token){
+      setLoading(false);
+      return ()=>{active=false;};
+    }
+    axios.get(`${API}/api/order/my`,{
+      headers:{Authorization:`Bearer ${auth.token}`},
+    }).then(response=>{
+      if(active)setOrders(response.data.orders||[]);
+    }).catch(error=>{
+      if(active)setError(error.response?.data?.message||'Your order history could not be loaded.');
+    }).finally(()=>{
+      if(active)setLoading(false);
+    });
+    return ()=>{active=false;};
+  },[]);
+
+  return (
+    <main style={{maxWidth:1000,margin:'0 auto',padding:'clamp(16px,4vw,32px)',fontFamily:'sans-serif'}}>
+      <Link to="/shop">← Shop</Link>
+      <h1>Order history</h1>
+      {!auth?.token&&<p>Sign in with your customer account to see orders. <Link to="/login">Sign in</Link></p>}
+      {loading&&<p role="status">Loading your orders…</p>}
+      {error&&<p role="alert" style={{color:'#b91c1c'}}>{error}</p>}
+      {!loading&&!error&&auth?.token&&orders.length===0&&<p style={{textAlign:'center',padding:40}}>No orders yet. <Link to="/shop">Start shopping</Link></p>}
+      {!loading&&orders.map(order=>(
+        <article key={order._id} style={{border:'1px solid #dbe3eb',borderRadius:12,padding:16,margin:'12px 0',background:'#fff'}}>
+          <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+            <strong>Order #{String(order._id).slice(-8).toUpperCase()}</strong>
+            <span style={{padding:'4px 10px',borderRadius:999,background:order.status==='Cancelled'?'#fee2e2':'#dcfce7'}}>{order.status}</span>
+          </div>
+          <div style={{fontSize:13,color:'#64748b',marginTop:8}}>{order.createdAt?new Date(order.createdAt).toLocaleString('en-IN'):''} · {order.address}</div>
+          <ul style={{paddingLeft:20}}>
+            {(order.items||[]).map((item,index)=>(
+              <li key={`${item.productId}-${index}`} style={{padding:'4px 0'}}>{item.name} × {item.qty} <span style={{color:'#475569'}}>— ₹{(Number(item.price)*Number(item.qty)).toLocaleString('en-IN')}</span></li>
+            ))}
+          </ul>
+          <strong>Total: ₹{Number(order.total||0).toLocaleString('en-IN')}</strong>
+        </article>
+      ))}
+    </main>
+  );
 }

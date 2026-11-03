@@ -9,12 +9,10 @@ describe('product card pricing',()=>{
     expect(getListPrice(product)).toBe(1000);
   });
 
-  it('uses a stable discount tier when MRP is absent',()=>{
+  it('does not invent a discount when MRP is absent',()=>{
     const product={_id:'phone-123',price:1000};
-    const discount=getDiscount(product);
 
-    expect([10,25,40]).toContain(discount);
-    expect(getDiscount(product)).toBe(discount);
-    expect(getListPrice(product)).toBe(Math.round(1000/(1-discount/100)));
+    expect(getDiscount(product)).toBe(0);
+    expect(getListPrice(product)).toBe(1000);
   });
 });

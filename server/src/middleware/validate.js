@@ -16,6 +16,9 @@ const productRules = [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 120 }),
   body('category').isIn(['Mobile', 'AudioPower', 'Protection', 'Storage', 'Computing', 'Lifestyle']),
   body('price').isFloat({ min: 0 }).toFloat(),
+  body('mrp').optional({ nullable: true }).isFloat({ min: 0 }).toFloat()
+    .custom((value, { req }) => Number(value) >= Number(req.body.price))
+    .withMessage('MRP cannot be lower than price'),
   body('stock').optional().isInt({ min: 0 }).toInt(),
   body('subcategory').optional({ nullable: true }).isString().isLength({ max: 100 }),
   body('brand').optional({ nullable: true }).isString().isLength({ max: 100 }),
@@ -37,7 +40,14 @@ const authRules = {
     body('fullName').trim().notEmpty().isLength({ max: 120 }),
     body('email').isEmail().normalizeEmail(),
     body('contact').trim().notEmpty().isLength({ max: 30 }),
-    body('dob').isString().trim().notEmpty().isLength({ max: 20 }),
+    body('dob').matches(/^\d{8}$/).withMessage('Date of birth must use DDMMYYYY format')
+      .custom(value => {
+        const day=Number(value.slice(0,2));
+        const month=Number(value.slice(2,4));
+        const year=Number(value.slice(4,8));
+        const date=new Date(Date.UTC(year,month-1,day));
+        return year>=1900&&date.getUTCFullYear()===year&&date.getUTCMonth()===month-1&&date.getUTCDate()===day&&date<=new Date();
+      }).withMessage('Date of birth must be a valid past date'),
     body('password').isString().isLength({ min: 8, max: 128 }),
     body('role').isIn(['Customer', 'Seller']),
     body('otp').isLength({ min: 6, max: 6 }).isNumeric(),

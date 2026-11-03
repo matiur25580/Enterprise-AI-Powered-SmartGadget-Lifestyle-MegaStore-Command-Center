@@ -1,13 +1,13 @@
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-jwt-secret';
 
-jest.mock('../src/models/User', () => ({ findOne: jest.fn(), create: jest.fn() }));
+jest.mock('../src/models/User', () => ({ findOne: jest.fn(), create: jest.fn(), countDocuments: jest.fn() }));
 jest.mock('../src/models/Otp', () => ({ findOne: jest.fn(), create: jest.fn(), deleteMany: jest.fn() }));
 jest.mock('../src/models/Product', () => ({
   countDocuments: jest.fn(), find: jest.fn(), findById: jest.fn(), create: jest.fn(),
   findOneAndUpdate: jest.fn(), findOneAndDelete: jest.fn(), insertMany: jest.fn(),
 }));
-jest.mock('../src/models/Order', () => ({ find: jest.fn(), countDocuments: jest.fn(), create: jest.fn(), findByIdAndUpdate: jest.fn() }));
+jest.mock('../src/models/Order', () => ({ find: jest.fn(), countDocuments: jest.fn(), create: jest.fn(), findByIdAndUpdate: jest.fn(), aggregate: jest.fn() }));
 jest.mock('../src/models/Coupon', () => ({ findOne: jest.fn() }));
 jest.mock('../src/utils/sendEmail', () => jest.fn().mockResolvedValue(undefined));
 
@@ -36,6 +36,7 @@ const otpHash = (otp,email,role,purpose) => crypto.createHmac('sha256',process.e
 beforeEach(()=>{
   jest.clearAllMocks();
   User.findOne.mockResolvedValue(null);
+  User.countDocuments.mockResolvedValue(0);
   Otp.findOne.mockResolvedValue(null);
   Otp.deleteMany.mockResolvedValue({});
   Product.countDocuments.mockResolvedValue(0);
@@ -46,6 +47,7 @@ beforeEach(()=>{
   Product.findOneAndDelete.mockResolvedValue({ _id:productId });
   Order.find.mockReturnValue(makeQuery([]));
   Order.countDocuments.mockResolvedValue(0);
+  Order.aggregate.mockResolvedValue([]);
   Coupon.findOne.mockResolvedValue(null);
 });
 
@@ -65,6 +67,12 @@ describe('health and security middleware',()=>{
     const response=await request(app).get('/health');
     expect(response.headers['x-content-type-options']).toBe('nosniff');
     expect(response.headers['x-frame-options']).toBeDefined();
+  });
+  it('requires role-authenticated uploads',async()=>{
+    const anonymous=await request(app).post('/api/upload/product-photo');
+    const wrongRole=await request(app).post('/api/upload/product-photo').set('Authorization',`Bearer ${tokenFor('Customer')}`);
+    expect(anonymous.status).toBe(401);
+    expect(wrongRole.status).toBe(403);
   });
   it('serves Swagger UI at /api-docs',async()=>{
     const response=await request(app).get('/api-docs/');
@@ -96,7 +104,7 @@ describe('authentication',()=>{
     expect(response.status).toBe(400);
   });
   it('registers a customer after verifying the OTP',async()=>{
-    const payload={fullName:'Shopper One',email:'shopper@example.com',contact:'1234567890',dob:'2000-01-01',password:'StrongPass1',role:'Customer',otp:'123456'};
+    const payload={fullName:'Shopper One',email:'shopper@example.com',contact:'1234567890',dob:'01012000',password:'StrongPass1',role:'Customer',otp:'123456'};
     Otp.findOne.mockResolvedValue({otpHash:otpHash(payload.otp,payload.email,payload.role,'register')});
     User.create.mockResolvedValue({ ...payload, _id:productId, uniqueId:'CSH2000' });
     const response=await request(app).post('/api/auth/register').send(payload);
@@ -104,7 +112,7 @@ describe('authentication',()=>{
     expect(User.create).toHaveBeenCalled();
   });
   it('rejects an incorrect registration OTP',async()=>{
-    const response=await request(app).post('/api/auth/register').send({fullName:'Shopper One',email:'shopper@example.com',contact:'1234567890',dob:'2000-01-01',password:'StrongPass1',role:'Customer',otp:'123456'});
+    const response=await request(app).post('/api/auth/register').send({fullName:'Shopper One',email:'shopper@example.com',contact:'1234567890',dob:'01012000',password:'StrongPass1',role:'Customer',otp:'123456'});
     expect(response.status).toBe(400);
     expect(response.body.message).toMatch(/OTP/);
   });
@@ -161,6 +169,23 @@ describe('product API',()=>{
     expect(response.status).toBe(200);
     expect(Product.findOneAndUpdate).toHaveBeenCalled();
   });
+  it('does not allow product updates to reassign seller ownership',async()=>{
+    const response=await request(app).put(`/api/products/${productId}`).set('Authorization',`Bearer ${tokenFor('Admin')}`).send({...productBody,sellerId:'507f1f77bcf86cd799439012'});
+    expect(response.status).toBe(200);
+    expect(Product.findOneAndUpdate.mock.calls[0][1]).not.toHaveProperty('sellerId');
+  });
+  it('rejects a product MRP below its selling price',async()=>{
+    const response=await request(app).post('/api/product/add').set('Authorization',`Bearer ${tokenFor('Seller')}`).send({...productBody,price:200,mrp:100});
+    expect(response.status).toBe(400);
+    expect(Product.create).not.toHaveBeenCalled();
+  });
+  it('returns only products owned by the authenticated seller',async()=>{
+    Product.find.mockReturnValue(makeQuery([{_id:productId,name:'Phone'}]));
+    const response=await request(app).get('/api/product/mine').set('Authorization',`Bearer ${tokenFor('Seller')}`);
+    expect(response.status).toBe(200);
+    expect(Product.find).toHaveBeenCalledWith({sellerId:productId});
+    expect(response.body.products).toHaveLength(1);
+  });
 });
 
 describe('order API',()=>{
@@ -180,6 +205,11 @@ describe('order API',()=>{
     const response=await request(app).post('/api/order/create').set('Authorization',`Bearer ${tokenFor('Customer')}`).send({items:[{productId,qty:0}],address:'123 Main Street'});
     expect(response.status).toBe(400);
   });
+  it('rejects invalid order status transitions',async()=>{
+    const response=await request(app).put(`/api/order/status/${productId}`).set('Authorization',`Bearer ${tokenFor('Admin')}`).send({status:'Refunded'});
+    expect(response.status).toBe(400);
+    expect(Order.findByIdAndUpdate).not.toHaveBeenCalled();
+  });
   it('places an order and decrements product inventory',async()=>{
     const product={_id:productId,name:'Phone',price:100};
     Product.findOneAndUpdate.mockResolvedValue(product);
@@ -198,6 +228,30 @@ describe('order API',()=>{
 });
 
 describe('coupon and referral validation',()=>{
+  it('requires an administrator role for live analytics',async()=>{
+    const response=await request(app).get('/api/extra/analytics/summary').set('Authorization',`Bearer ${tokenFor('Customer')}`);
+    expect(response.status).toBe(403);
+  });
+
+  describe('media upload authorization and validation',()=>{
+    it('rejects files with unsupported media types',async()=>{
+      const response=await request(app).post('/api/upload/product-photo')
+        .set('Authorization',`Bearer ${tokenFor('Seller')}`)
+        .attach('photo',Buffer.from('not an image'),{filename:'notes.txt',contentType:'text/plain'});
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Unsupported file type');
+    });
+  });
+  it('returns analytics calculated from database models',async()=>{
+    Product.countDocuments.mockResolvedValue(12);
+    Order.countDocuments.mockResolvedValue(7);
+    User.countDocuments.mockResolvedValue(31);
+    Order.aggregate.mockResolvedValue([{revenue:82500}]);
+    const response=await request(app).get('/api/extra/analytics/summary').set('Authorization',`Bearer ${tokenFor('Admin')}`);
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual({totalProducts:12,totalOrders:7,totalUsers:31,revenue:82500});
+    expect(Order.aggregate).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({$match:{status:{$ne:'Cancelled'}}})]));
+  });
   it('rejects invalid coupon characters',async()=>{
     const response=await request(app).post('/api/extra/coupon/apply').send({code:'<script>'});
     expect(response.status).toBe(400);

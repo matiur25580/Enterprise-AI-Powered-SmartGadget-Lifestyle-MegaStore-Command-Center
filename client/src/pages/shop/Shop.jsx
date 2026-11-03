@@ -3,8 +3,8 @@ import {Link,useLocation} from 'react-router-dom';
 import axios from 'axios';
 import ProductCard,{getDiscount} from '../../components/ProductCard.jsx';
 import FlashSale from '../../components/FlashSale.jsx';
+import {API} from '../../utils/api.js';
 
-const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
 const CATEGORIES=[
   {label:'All',value:'all'},
   {label:'Mobile',value:'Mobile'},

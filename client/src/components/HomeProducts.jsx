@@ -1,8 +1,7 @@
 import {useCallback,useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import ProductCard,{getDiscount} from './ProductCard.jsx';
-
-const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
+import {API} from '../utils/api.js';
 
 function ProductSkeleton(){
   return <div className="product-card-skeleton" aria-hidden="true"><div className="skeleton-media"/><div className="skeleton-line skeleton-brand"/><div className="skeleton-line"/><div className="skeleton-line skeleton-short"/><div className="skeleton-line skeleton-button"/></div>;

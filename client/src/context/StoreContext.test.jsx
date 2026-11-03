@@ -20,6 +20,16 @@ describe('StoreContext cart and order logic',()=>{
     expect(JSON.parse(localStorage.getItem('ms_cart'))).toEqual([product]);
   });
 
+  it('recovers from invalid persisted cart data instead of crashing',()=>{
+    localStorage.setItem('ms_cart','{');
+    const logError=vi.spyOn(console,'error').mockImplementation(()=>{});
+    const {result}=renderHook(()=>useStore(),{wrapper});
+
+    expect(result.current.cart).toEqual([]);
+    expect(logError).toHaveBeenCalled();
+    logError.mockRestore();
+  });
+
   it('adds the selected quantity as individual cart items',()=>{
     const product={_id:'phone',name:'Phone',price:100};
     const {result}=renderHook(()=>useStore(),{wrapper});

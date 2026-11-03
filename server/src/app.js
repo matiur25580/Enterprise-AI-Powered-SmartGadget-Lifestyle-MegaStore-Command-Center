@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
+const path = require('path');
 const openapiSpec = require('./docs/openapi');
 
 const app = express();
@@ -39,7 +40,7 @@ app.use('/api/auth', rateLimit({
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { explorer: true }));
 app.use('/api/upload', require('./routes/upload'));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 app.get('/', (req, res) => res.json({ message: 'MegaStore Enterprise API Running', version: '2.0' }));
 app.get('/health', (req, res) => res.json({ success: true, message: 'Health check successful', uptime: process.uptime() }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime(), db: require('mongoose').connection.readyState === 1 ? 'connected' : 'disconnected' }));

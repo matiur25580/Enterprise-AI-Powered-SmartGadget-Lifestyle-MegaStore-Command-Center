@@ -1,21 +1,31 @@
-import {BrowserRouter,Routes,Route,Link} from 'react-router-dom';
+import {BrowserRouter,Routes,Route,Link,useLocation,useNavigate} from 'react-router-dom';
 import {Toaster} from 'react-hot-toast';
 import Login from './pages/auth/Login.jsx';import Register from './pages/auth/Register.jsx';import ForgotPassword from './pages/auth/ForgotPassword.jsx';
 import ShopWrapper from './pages/shop/ShopWrapper.jsx';import Checkout from './pages/shop/Checkout.jsx';
 import Wishlist from './pages/shop/Wishlist.jsx';import Orders from './pages/shop/Orders.jsx';import AddressBook from './pages/shop/AddressBook.jsx';
 import Terms from './pages/shop/Terms.jsx';import Settings from './pages/shop/Settings.jsx';
 import SellerDashboard from './pages/seller/SellerDashboard.jsx';import AdminDashboard from './pages/admin/AdminDashboard.jsx';
-import ProductDetail from './pages/shop/ProductDetailLive.jsx';
 import ProductDetailLive from './pages/shop/ProductDetailLive.jsx';
 import ApiDocs from './pages/shop/ApiDocs.jsx';
 import BulkUpload from './pages/seller/BulkUpload.jsx';
 import HRShowcase from './pages/hr/HRShowcase.jsx';
 import RouteErrorBoundary from './components/RouteErrorBoundary.jsx';
+import RequireRole from './components/RequireRole.jsx';
 import SupportChat from './components/SupportChat.jsx';import NotifyCenter from './components/NotifyCenter.jsx';import OfferZone from './components/OfferZone.jsx';
 import {StoreProvider,useStore} from './context/StoreContext.jsx';import {useThemeDate} from './pages/auth/AuthLayout.jsx';
 import HomeProducts from './components/HomeProducts.jsx';
+import {toast} from './utils/notifications.jsx';
+function readAuth(){
+  try{return JSON.parse(localStorage.getItem('ms_auth')||'null');}
+  catch{return null;}
+}
 function Nav(){
+  const {pathname}=useLocation();
+  const navigate=useNavigate();
   const {cart,wish}=useStore();const {date,time}=useThemeDate();
+  const auth=readAuth();
+  const signOut=()=>{localStorage.removeItem('ms_auth');toast.success('You have signed out.');navigate('/shop');};
+  if(['/login','/register','/forgot-password'].includes(pathname))return null;
   return (<><OfferZone/><nav style={{display:'flex',gap:10,padding:'10px 20px',background:'#212122',color:'#fff',fontSize:13,flexWrap:'wrap',alignItems:'center'}}>
     <Link to="/" style={{color:'#fff',textDecoration:'none',fontWeight:'bold'}}>🛒 MegaStore</Link>
     <Link to="/shop" style={{color:'#fff',textDecoration:'none'}}>Shop</Link>
@@ -23,8 +33,15 @@ function Nav(){
     <Link to="/orders" style={{color:'#fff',textDecoration:'none'}}>📦 Orders</Link>
     <Link to="/checkout" style={{color:'#fff',textDecoration:'none'}}>🛒 ({cart.length})</Link>
     <Link to="/settings" style={{color:'#fff',textDecoration:'none'}}>⚙️</Link>
+    {auth?.role==='Seller'&&<Link to="/seller" style={{color:'#fff',textDecoration:'none'}}>Seller dashboard</Link>}
+    {auth?.role==='Admin'&&<Link to="/admin" style={{color:'#fff',textDecoration:'none'}}>Admin dashboard</Link>}
+    {auth?.token?<button type="button" onClick={signOut} style={{padding:'6px 10px',border:'1px solid #94a3b8',borderRadius:6,background:'transparent',color:'#fff',cursor:'pointer'}}>Sign out</button>:<Link to="/login" style={{color:'#fff',textDecoration:'none'}}>Sign in</Link>}
     <span style={{marginLeft:'auto',fontSize:11,opacity:.8}}>{date} | {time}</span>
   </nav><NotifyCenter/></>);
+}
+function GlobalSupport(){
+  const {pathname}=useLocation();
+  return ['/login','/register','/forgot-password'].includes(pathname)?null:<SupportChat/>;
 }
 function Landing(){
   return (<main style={{minHeight:'100vh',background:'#060606',color:'#fff'}}>
@@ -35,6 +52,7 @@ function Landing(){
         <p style={{maxWidth:600,color:'#b7c0c8',lineHeight:1.6}}>Browse the live catalog, check current stock, and place a cash-on-delivery order.</p>
         <div style={{display:'flex',gap:10,flexWrap:'wrap',marginTop:24}}>
           <Link to="/shop" style={{background:'#00e676',color:'#000',padding:'12px 20px',borderRadius:6,textDecoration:'none',fontWeight:700}}>Browse products</Link>
+          <Link to="/login" style={{background:'#1f6feb',color:'#fff',padding:'12px 20px',borderRadius:6,textDecoration:'none',fontWeight:700}}>Sign in</Link>
           <Link to="/for-hr" style={{background:'transparent',color:'#fff',border:'1px solid #555',padding:'12px 20px',borderRadius:6,textDecoration:'none'}}>Project overview</Link>
         </div>
       </div>
@@ -47,8 +65,9 @@ export default function App(){return (<StoreProvider><BrowserRouter><Toaster pos
 <Route path="/" element={<Landing/>}/><Route path="/shop" element={<ShopWrapper/>}/><Route path="/checkout" element={<Checkout/>}/>
 <Route path="/wishlist" element={<Wishlist/>}/><Route path="/orders" element={<Orders/>}/><Route path="/addresses" element={<AddressBook/>}/>
 <Route path="/terms" element={<Terms/>}/><Route path="/settings" element={<Settings/>}/>
-<Route path="/seller" element={<SellerDashboard/>}/><Route path="/admin" element={<AdminDashboard/>}/>
-<Route path="/product/:id" element={<ProductDetailLive/>}/><Route path="/api-docs" element={<ApiDocs/>}/><Route path="/seller/bulk" element={<BulkUpload/>}/><Route path="/for-hr" element={<HRShowcase/>}/>
+<Route path="/seller" element={<RequireRole role="Seller"><SellerDashboard/></RequireRole>}/><Route path="/admin" element={<RequireRole role="Admin"><AdminDashboard/></RequireRole>}/>
+<Route path="/product/:id" element={<ProductDetailLive/>}/><Route path="/api-docs" element={<ApiDocs/>}/><Route path="/seller/bulk" element={<RequireRole role="Seller"><BulkUpload/></RequireRole>}/><Route path="/for-hr" element={<HRShowcase/>}/>
 <Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/>
-</Routes></RouteErrorBoundary><SupportChat/></BrowserRouter></StoreProvider>);
+<Route path="*" element={<main style={{minHeight:'60vh',display:'grid',placeContent:'center',padding:24,textAlign:'center'}}><h1>Page not found</h1><p>The page may have moved or the address may be incorrect.</p><Link to="/">Return to MegaStore</Link></main>}/>
+</Routes></RouteErrorBoundary><GlobalSupport/></BrowserRouter></StoreProvider>);
 }

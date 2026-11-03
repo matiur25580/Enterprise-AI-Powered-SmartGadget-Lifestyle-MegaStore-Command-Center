@@ -18,13 +18,29 @@ const forbidden = errorRef('Forbidden');
 const authResponse = ref('AuthResponse');
 const productInput = ref('ProductInput');
 const orderRequest = ref('OrderRequest');
+const uploadRequest = field => ({
+  required: true,
+  content: {
+    'multipart/form-data': {
+      schema: {
+        type: 'object',
+        required: [field],
+        properties: { [field]: { type: 'string', format: 'binary' } },
+      },
+    },
+  },
+});
+const uploadResponse = description => jsonResponse(description, {
+  type: 'object',
+  properties: { success: { type: 'boolean' }, url: { type: 'string' } },
+});
 
 module.exports = {
   openapi: '3.0.3',
   info: {
     title: 'MegaStore API',
     version: '2.0.0',
-    description: 'Authentication, catalog, orders, coupon and referral endpoints. Payment is currently simulated in the frontend; this service does not expose a /api/payment endpoint.',
+    description: 'Authentication, catalog, orders, coupon and referral endpoints. Checkout currently supports cash on delivery only; there are no online payment endpoints.',
   },
   servers: [{ url: '/' }],
   tags: [
@@ -33,7 +49,8 @@ module.exports = {
     { name: 'Products' },
     { name: 'Orders' },
     { name: 'Coupons and referrals' },
-    { name: 'Payment', description: 'No backend payment endpoints are implemented. PaymentBox currently simulates payment in the frontend.' },
+    { name: 'Payment', description: 'No online payment endpoints are implemented; checkout supports cash on delivery.' },
+    { name: 'Administration' },
   ],
   components: {
     securitySchemes: {
@@ -81,7 +98,7 @@ module.exports = {
           fullName: { type: 'string', maxLength: 120 },
           email: { type: 'string', format: 'email' },
           contact: { type: 'string', maxLength: 30 },
-          dob: { type: 'string', maxLength: 20 },
+          dob: { type: 'string', pattern: '^\\d{8}$', description: 'DDMMYYYY and a valid past date' },
           password: { type: 'string', minLength: 8, maxLength: 128 },
           role: { type: 'string', enum: ['Customer', 'Seller'] },
           otp: { type: 'string', pattern: '^\\d{6}$' },
@@ -116,6 +133,7 @@ module.exports = {
           category: { type: 'string', enum: ['Mobile', 'AudioPower', 'Protection', 'Storage', 'Computing', 'Lifestyle'] },
           subcategory: { type: 'string', maxLength: 100 },
           price: { type: 'number', minimum: 0 },
+          mrp: { type: 'number', minimum: 0, description: 'Must be greater than or equal to price' },
           stock: { type: 'integer', minimum: 0 },
           brand: { type: 'string', maxLength: 100 },
           image: { type: 'string', maxLength: 2048 },
@@ -264,6 +282,13 @@ module.exports = {
         ],
       }),
     },
+    '/api/products/mine': {
+      get: operation('Products', 'List products belonging to the authenticated seller', {
+        200: jsonResponse('Seller product list', { type: 'object', properties: { success: { type: 'boolean' }, products: { type: 'array', items: ref('Product') } } }),
+        401: unauthorized,
+        403: forbidden,
+      }, auth),
+    },
     '/api/products/{id}': {
       parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' } }],
       get: operation('Products', 'Get product details', {
@@ -294,6 +319,24 @@ module.exports = {
         400: badRequest,
         401: unauthorized,
       }, { ...auth, requestBody: body(productInput) }),
+    },
+    '/api/upload/product-photo': {
+      post: operation('Products', 'Upload a product photo (Admin or Seller)', {
+        200: uploadResponse('Photo uploaded'),
+        400: badRequest,
+        401: unauthorized,
+        403: forbidden,
+        413: { description: 'File exceeds the upload limit' },
+      }, { ...auth, requestBody: uploadRequest('photo') }),
+    },
+    '/api/upload/review-video': {
+      post: operation('Products', 'Upload a review video (Customer)', {
+        200: uploadResponse('Review video uploaded'),
+        400: badRequest,
+        401: unauthorized,
+        403: forbidden,
+        413: { description: 'File exceeds the upload limit' },
+      }, { ...auth, requestBody: uploadRequest('video') }),
     },
     '/api/products/stock/{id}': {
       put: operation('Products', 'Set stock (Admin or owning Seller)', {
@@ -361,6 +404,25 @@ module.exports = {
           properties: { status: { type: 'string', enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled'] } },
         }),
       }),
+    },
+    '/api/extra/analytics/summary': {
+      get: operation('Administration', 'Get database-backed store summary (Admin)', {
+        200: jsonResponse('Current database totals', {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                totalProducts: { type: 'integer' }, totalOrders: { type: 'integer' },
+                totalUsers: { type: 'integer' }, revenue: { type: 'number' },
+              },
+            },
+          },
+        }),
+        401: unauthorized,
+        403: forbidden,
+      }, auth),
     },
     '/api/extra/coupon/apply': {
       post: operation('Coupons and referrals', 'Validate and apply a coupon code', {

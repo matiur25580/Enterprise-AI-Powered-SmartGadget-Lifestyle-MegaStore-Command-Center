@@ -4,14 +4,16 @@ const {protect,allow}=require('../middleware/auth');
 const {body}=require('express-validator');const {validate,productRules}=require('../middleware/validate');
 const router=express.Router();
 router.post('/add',protect,allow('Admin','Seller'),productRules,validate,async(req,res,next)=>{try{
-  const {name,category,subcategory,price,stock,brand,comboTags,image}=req.body;
-  const p=await Product.create({name,category,subcategory,price,stock,brand,comboTags,image,sellerId:req.user.id});
+  const {name,category,subcategory,price,mrp,stock,brand,comboTags,image}=req.body;
+  const p=await Product.create({name,category,subcategory,price,mrp,stock,brand,comboTags,image,sellerId:req.user.id});
   res.json({success:true,message:'Product added successfully',product:p});
 }catch(e){next(e)}});
 router.put('/:id',protect,allow('Admin','Seller'),productRules,validate,async(req,res,next)=>{
   try{
     const filter={_id:req.params.id};if(req.user.role!=='Admin')filter.sellerId=req.user.id;
-    const product=await Product.findOneAndUpdate(filter,req.body,{new:true,runValidators:true});
+    const editableFields=['name','category','subcategory','price','stock','brand','comboTags','image','mrp','rating','highlights','specs','images'];
+    const updates=Object.fromEntries(editableFields.filter(field=>Object.hasOwn(req.body,field)).map(field=>[field,req.body[field]]));
+    const product=await Product.findOneAndUpdate(filter,updates,{new:true,runValidators:true});
     if(!product)return res.status(404).json({success:false,message:'Product not found'});
     res.json({success:true,message:'Product updated successfully',product});
   }catch(e){next(e)}
@@ -33,6 +35,12 @@ router.get('/all',async(req,res,next)=>{
     const total=await Product.countDocuments(q);
     const list=await Product.find(q).sort({[sortField]:order==='asc'?1:-1}).skip(skip).limit(pageSize);
     res.json({success:true,message:'Products fetched successfully',total,pages:Math.ceil(total/pageSize),page:pageNumber,products:list});
+  }catch(e){next(e)}
+});
+router.get('/mine',protect,allow('Seller'),async(req,res,next)=>{
+  try{
+    const products=await Product.find({sellerId:req.user.id}).sort({updatedAt:-1}).limit(100);
+    res.json({success:true,products});
   }catch(e){next(e)}
 });
 router.get('/:id',async(req,res,next)=>{

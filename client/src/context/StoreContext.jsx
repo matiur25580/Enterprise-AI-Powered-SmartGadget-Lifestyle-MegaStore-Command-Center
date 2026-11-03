@@ -2,15 +2,35 @@ import {createContext,useContext,useState,useEffect} from 'react';
 import {addCartItem} from '../utils/commerce.js';
 import {notifyCartAdded,toast} from '../utils/notifications.jsx';
 const Ctx=createContext();export const useStore=()=>useContext(Ctx);
+function readStoredArray(key){
+  try{
+    const stored=localStorage.getItem(key);
+    if(stored===null)return [];
+    const parsed=JSON.parse(stored);
+    if(!Array.isArray(parsed))throw new Error('Stored value must be an array');
+    return parsed;
+  }catch(error){
+    console.error(`Could not read ${key} from browser storage:`,error);
+    return [];
+  }
+}
+function persistArray(key,value){
+  try{
+    localStorage.setItem(key,JSON.stringify(value));
+  }catch(error){
+    console.error(`Could not persist ${key} to browser storage:`,error);
+    toast.error('Your browser could not save this update.');
+  }
+}
 export function StoreProvider({children}){
-  const [cart,setCart]=useState(()=>JSON.parse(localStorage.getItem('ms_cart')||'[]'));
-  const [wish,setWish]=useState(()=>JSON.parse(localStorage.getItem('ms_wish')||'[]'));
-  const [orders,setOrders]=useState(()=>JSON.parse(localStorage.getItem('ms_orders')||'[]'));
-  const [addrs,setAddrs]=useState(()=>JSON.parse(localStorage.getItem('ms_addr')||'[{"id":1,"label":"Home","name":"Rubel Ali","phone":"9876543210","pin":"700156","addr":"Newtown, Kolkata, WB"}]'));
-  useEffect(()=>localStorage.setItem('ms_cart',JSON.stringify(cart)),[cart]);
-  useEffect(()=>localStorage.setItem('ms_wish',JSON.stringify(wish)),[wish]);
-  useEffect(()=>localStorage.setItem('ms_orders',JSON.stringify(orders)),[orders]);
-  useEffect(()=>localStorage.setItem('ms_addr',JSON.stringify(addrs)),[addrs]);
+  const [cart,setCart]=useState(()=>readStoredArray('ms_cart'));
+  const [wish,setWish]=useState(()=>readStoredArray('ms_wish'));
+  const [orders,setOrders]=useState(()=>readStoredArray('ms_orders'));
+  const [addrs,setAddrs]=useState(()=>readStoredArray('ms_addr'));
+  useEffect(()=>persistArray('ms_cart',cart),[cart]);
+  useEffect(()=>persistArray('ms_wish',wish),[wish]);
+  useEffect(()=>persistArray('ms_orders',orders),[orders]);
+  useEffect(()=>persistArray('ms_addr',addrs),[addrs]);
   const addCart=(p,quantity=1)=>{
     if(p.stock!==undefined&&Number(p.stock)<=0){toast.error('This item is currently out of stock.');return;}
     const count=Math.max(1,Math.floor(Number(quantity)||1));

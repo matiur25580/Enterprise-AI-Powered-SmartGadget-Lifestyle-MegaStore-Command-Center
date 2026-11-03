@@ -1,8 +1,8 @@
 import {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useStore} from '../context/StoreContext.jsx';
+import {API} from '../utils/api.js';
 
-const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
 const CATEGORY_META={
   Mobile:{icon:'📱',className:'mobile'},
   AudioPower:{icon:'🎧',className:'audio'},
@@ -12,20 +12,16 @@ const CATEGORY_META={
   Lifestyle:{icon:'⌚',className:'lifestyle'},
 };
 
-function hash(value=''){
-  return [...String(value)].reduce((result,character)=>(result*31+character.charCodeAt(0))>>>0,7);
-}
-
 export function getDiscount(product){
   const price=Number(product.price)||0;
   const mrp=Number(product.mrp);
   if(mrp>price&&price>0)return Math.round((mrp-price)/mrp*100);
-  return [10,25,40][hash(product._id)%3];
+  return 0;
 }
 
 export function getListPrice(product){
   const price=Number(product.price)||0;
-  return Number(product.mrp)>price?Number(product.mrp):Math.round(price/(1-getDiscount(product)/100));
+  return Number(product.mrp)>price?Number(product.mrp):price;
 }
 
 export function formatPrice(value){

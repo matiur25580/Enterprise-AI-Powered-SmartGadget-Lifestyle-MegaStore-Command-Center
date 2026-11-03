@@ -8,8 +8,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 10000
-      MONGO_URI: mongodb://mongo:27017/megastore
-      JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-before-deployment}
+      MONGO_URI: mongodb://mongo:27017/megastore?replicaSet=rs0
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in a root .env file}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       EMAIL_USER: ${EMAIL_USER:-}
       EMAIL_PASS: ${EMAIL_PASS:-}
@@ -25,11 +25,12 @@ services:
 
   mongo:
     image: mongo:7
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status().ok } catch (error) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}).ok }"]
       interval: 10s
       timeout: 5s
       retries: 5

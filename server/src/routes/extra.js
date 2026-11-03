@@ -2,9 +2,27 @@ const express = require('express');
 const {body}=require('express-validator');const {validate}=require('../middleware/validate');
 const Coupon=require('../models/Coupon');
 const User=require('../models/User');
+const Product=require('../models/Product');
+const Order=require('../models/Order');
+const {protect,allow}=require('../middleware/auth');
 const router = express.Router();
-router.get('/analytics/summary', (req, res) => {
-  res.json({ success: true, message: 'Analytics fetched', data: { totalProducts: 24, totalOrders: 156, revenue: 2500000 } });
+router.get('/analytics/summary',protect,allow('Admin'),async(req,res,next)=>{
+  try{
+    const [totalProducts,totalOrders,totalUsers,revenueRows]=await Promise.all([
+      Product.countDocuments(),
+      Order.countDocuments(),
+      User.countDocuments(),
+      Order.aggregate([
+        {$match:{status:{$ne:'Cancelled'}}},
+        {$group:{_id:null,revenue:{$sum:'$total'}}},
+      ]),
+    ]);
+    res.json({
+      success:true,
+      message:'Analytics fetched',
+      data:{totalProducts,totalOrders,totalUsers,revenue:revenueRows[0]?.revenue||0},
+    });
+  }catch(error){next(error)}
 });
 router.post('/review/add', (req, res) => {
   res.json({ success: true, message: 'Review added' });

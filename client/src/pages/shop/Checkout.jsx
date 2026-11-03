@@ -1,10 +1,10 @@
 import {useState} from 'react';import axios from 'axios';import {Link,useNavigate} from 'react-router-dom';import {useStore} from '../../context/StoreContext.jsx';
 import {calculateCartTotal} from '../../utils/commerce.js';
 import {toast} from '../../utils/notifications.jsx';
-const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
+import {API} from '../../utils/api.js';
 export default function Checkout(){
   const [address,setAddress]=useState('');const [auth]=useState(()=>{try{return JSON.parse(localStorage.getItem('ms_auth')||'null')}catch{return null}});const [error,setError]=useState('');const [submitting,setSubmitting]=useState(false);
-  const {cart,placeOrder,moveToWishlist}=useStore();const navigate=useNavigate();
+  const {cart,setCart,moveToWishlist}=useStore();const navigate=useNavigate();
   const total=calculateCartTotal(cart);
   const submit=async(e)=>{
     e.preventDefault();
@@ -18,7 +18,7 @@ export default function Checkout(){
         items:cart.map(item=>({productId:item._id,name:item.name,price:Number(item.price),qty:1})),status:'Pending'
       },{headers:{Authorization:`Bearer ${auth.token}`}});
       if(!response.data?.success)throw new Error(response.data?.message||'Order could not be placed');
-      placeOrder(cart,address.trim());toast.success('Your order has been placed.',{id:loadingToast});navigate('/orders');
+      setCart([]);toast.success('Your order has been placed.',{id:loadingToast});navigate('/orders');
     }catch{const message='We couldn’t place your order. Please check your connection and try again.';setError(message);toast.error(message,{id:loadingToast});}
     finally{setSubmitting(false)}
   };

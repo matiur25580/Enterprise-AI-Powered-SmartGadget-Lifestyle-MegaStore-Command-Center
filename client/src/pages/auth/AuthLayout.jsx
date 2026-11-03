@@ -6,7 +6,7 @@ export function useThemeDate(){
   const dd=String(now.getDate()).padStart(2,'0');const mm=String(now.getMonth()+1).padStart(2,'0');
   const h12=now.getHours()%12||12;const ap=now.getHours()>=12?'PM':'AM';
   const date=`${dd}.${mm}.${now.getFullYear()}`;
-  const time=`${String(h12).padStart(2,'0')}.${String(now.getMinutes()).padStart(2,'0')}.${String(now.getSeconds()).padStart(2,'0')} ${ap}`;
+  const time=`${String(h12).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} ${ap}`;
   return {dark,setDark,date,time};
 }
 export function showSuccess(msg){toast.success(msg)}

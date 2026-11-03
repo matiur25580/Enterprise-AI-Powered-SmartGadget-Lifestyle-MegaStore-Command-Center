@@ -1,7 +1,8 @@
 import {useState} from 'react';
 import axios from 'axios';
 import {toast} from '../utils/notifications.jsx';
-const API='https://enterprise-ai-powered-smartgadget.onrender.com';
+import {API} from '../utils/api.js';
+import {getAuthToken} from '../utils/auth.js';
 export default function VideoUpload(){
   const [loading,setLoading]=useState(false);
   const [done,setDone]=useState(false);
@@ -13,7 +14,9 @@ export default function VideoUpload(){
     const loadingToast=toast.loading('Uploading your video…');
     const fd=new FormData();
     fd.append('video',f);
-    axios.post(API+'/api/upload/review-video',fd).then(()=>{
+    const token=getAuthToken();
+    if(!token){setLoading(false);toast.error('Sign in with a customer account before uploading a review.',{id:loadingToast});return;}
+    axios.post(API+'/api/upload/review-video',fd,{headers:{Authorization:`Bearer ${token}`}}).then(()=>{
       setLoading(false);setDone(true);toast.success('Video review uploaded.',{id:loadingToast});
     }).catch(()=>{
       setLoading(false);toast.error('Video upload failed. Please try again.',{id:loadingToast});

@@ -42,12 +42,12 @@
 
 MegaStore Command Center is an e-commerce portfolio project built with the **MERN stack** (MongoDB, Express.js, React, Node.js). It currently includes a catalog API, JWT-based sign-in, email OTP registration/password reset, and a COD order endpoint. The interface also contains shopping and operations concepts at varying levels of completion.
 
-The API uses JWT authentication, hashed short-lived OTPs, role checks for catalog/order operations, server-calculated order totals, MongoDB transactions for stock reservation, and bounded media uploads. This repository does not yet include a production payment integration or automated test suite.
+The API uses JWT authentication, hashed short-lived OTPs, role checks for catalog/order operations, server-calculated order totals, MongoDB transactions for stock reservation, and bounded media uploads. The repository includes focused frontend and API tests, but does not yet include a production payment integration or production monitoring.
 
 ### Implementation Status
-- **Implemented API flows:** registration/login/password reset, public product listing/search, role-protected product mutation, COD order creation with server-side prices and transactional stock reservation, image/video upload endpoints.
-- **Partially implemented UI:** checkout submits to the API, but the order-history screen and cancel/return actions still use browser storage; seller/admin dashboards and many promotional/AI-labelled widgets use local sample behavior.
-- **Not implemented:** Razorpay payment processing, measured Lighthouse scores, automated tests, and production monitoring. Treat the HR showcase metrics and feature widgets as presentation content, not verified production evidence.
+- **Implemented API flows:** registration/login/password reset, public product listing/search, role-protected product mutation, seller-owned product listing, COD order creation with server-side prices and transactional stock reservation, database-backed admin summary metrics, image/video upload endpoints.
+- **Partially implemented UI:** checkout and order history use the API; cancellation/returns are not available yet. Several promotional/AI-labelled widgets are presentational and are not backed by dedicated services.
+- **Not implemented:** Razorpay payment processing, measured Lighthouse scores, and production monitoring. Treat the HR showcase metrics and feature widgets as presentation content, not verified production evidence.
 
 ---
 
@@ -61,17 +61,17 @@ The API uses JWT authentication, hashed short-lived OTPs, role checks for catalo
 
 > ✏️ `https://enterprise-ai-powered-smart-gadget-neon.vercel.app` er jaygay tomar asol Vercel URL bosao (2 jaygay ache)
 
-**Demo accounts:** Register a new account from the live site — OTP will arrive at your email within seconds. Each role (Admin, Seller, Customer, DeliveryAgent, SupportAgent, MarketingManager) has its own dashboard.
+Register a Customer or Seller account from the live site. Administrative and other staff roles require provisioning outside the public registration flow; only Admin and Seller dashboards are currently implemented.
 
 ---
 
 ## 🌟 Key Highlights
 
-- **Six account roles** — role values exist in the authentication model; not every role has a working dashboard
+- **Six account roles** — public signup supports Customer and Seller; other roles require administrator provisioning. Only Seller and Admin dashboard routes are currently implemented.
 - **Authentication** — email OTP, unique IDs, password hashing, and JWT sign-in
 - **Catalog and COD checkout** — API-backed product data, server-side price calculation, stock reservation, and order persistence
 - **Shopping prototypes** — visual/voice search, price suggestions, deal widgets, delivery map, and invoice components are client-side experiences and are not backed by dedicated AI/payment/fulfilment services
-- **Seller API** — protected product creation, stock changes, and deletion; seller dashboard UI is not yet API-backed
+- **Seller API** — protected product creation, stock changes, deletion, and seller-owned catalog listing; Seller dashboard reads and mutates the seller's API catalog
 - **HR showcase page** (`/for-hr`) — architecture diagram and project notes; displayed performance badges are static, not measured
 - **Dark-first responsive UI** — works on mobile, tablet, and desktop
 
@@ -122,15 +122,14 @@ The API uses JWT authentication, hashed short-lived OTPs, role checks for catalo
 - **Side-by-side product comparison**
 - **Price Drop Alerts**, **Recently Viewed** items, **Bundle Offers** (Frequently Bought Together)
 - **Coupon engine:** `MEGA10`, `DIWALI20` + automatic bulk-quantity discounts
-- **Payments:** COD checkout through the order API; EMI calculations are UI-only and no payment provider is integrated
-- Return / Exchange / Cancel flows with reason capture
+- **Payments:** COD checkout through the order API; no online payment provider is integrated
 - Multiple saved delivery addresses (address book)
 - 🎡 **Lucky Spin Wheel** promotional widget on the landing page
 - ⚡ **Flash Deal** countdown timers on individual products
 - 🎁 **Refer & Earn** — referral code `RUBEL100`, Rs.100 credit per successful referral
 
 ### 📦 Order Management
-- Order placement persists to MongoDB; order history and cancel/return actions currently use browser storage
+- Order placement and order history persist through the API; cancel/return actions are not currently available
 - 🗺️ **Delivery Map** — presentation-only animation; no courier location feed is connected
 - 🧾 **GST Invoice** — client-side invoice generator; tax/business details are not validated against a tax service
 - 🎥 **Video Unboxing Reviews** — customers can upload video reviews (up to 50MB)
@@ -176,9 +175,9 @@ The API uses JWT authentication, hashed short-lived OTPs, role checks for catalo
 
 | Collection | Purpose | Key Fields |
 |---|---|---|
-| `users` | All role accounts | `name`, `email`, `role`, `uniqueId` (XYZDDMMYYYY), `passwordHash`; compound unique index on `email + role` |
+| `users` | All role accounts | `fullName`, `email`, `role`, `uniqueId`, bcrypt `password`; compound unique index on `email + role` |
 | `otps` | Email verification codes | `email`, `otpHash`, `purpose` (register/reset), `expiresAt` (TTL 5 min) |
-| `products` | Catalog | `name`, `price`, `category`, `image`, `stock`, `sellerId` |
+| `products` | Catalog | `name`, `price`, `mrp`, `category`, `images[]`, `stock`, `sellerId` |
 | `orders` | Purchases | `customerId`, `customerEmail`, `items[]`, `total`, `status`, `address` |
 | `reviews` | Ratings + video reviews | `productId`, `customerId`, `rating`, `text`, `videoUrl` |
 | `coupons` | Discount codes | `code`, `percentOff`, `minOrder`, `expiresAt` |
@@ -193,8 +192,8 @@ The API uses JWT authentication, hashed short-lived OTPs, role checks for catalo
 - **JWT** access tokens with expiry; role-based middleware on every protected route
 - `.env` secrets excluded from version control via `.gitignore` (`.env.example` provided as template)
 - CORS restricted to the deployed frontend origin
-- Razorpay orders created **server-side** — amounts are never trusted from the client
-- File uploads restricted by type and size (images; video reviews capped at 50MB)
+- Order totals are calculated from catalog prices on the server; client-submitted prices are ignored
+- Product-photo uploads require Admin/Seller access; review videos require Customer access and are size/type limited
 
 ---
 
@@ -204,7 +203,6 @@ The API uses JWT authentication, hashed short-lived OTPs, role checks for catalo
 - **Node.js** v18 or higher
 - **MongoDB Atlas** account (free tier is sufficient)
 - **Gmail** account with an App Password (for OTP emails)
-- **Razorpay** test keys (optional — only needed for payment flows)
 
 ### Installation
 
@@ -231,6 +229,12 @@ npm run dev
 ```
 Frontend runs on `http://localhost:5173`
 
+For local development, the client defaults to `http://localhost:10000`; set `VITE_API_URL` to override it.
+
+### Docker Compose
+
+The Compose stack starts a single-node MongoDB replica set because transactional stock reservation requires a replica set. Create a root `.env` file containing a strong random `JWT_SECRET` (at least 32 characters) and, when using email OTP flows, `EMAIL_USER` and `EMAIL_PASS`. Then run `docker compose up --build`.
+
 ---
 
 ## 🔑 Environment Variables
@@ -240,12 +244,10 @@ Create a `.env` file inside the `server/` folder (see `.env.example` for the tem
 | Variable | Required | Description | Example |
 |---|---|---|---|
 | `MONGO_URI` | ✅ | MongoDB Atlas connection string | `mongodb+srv://user:pass@cluster.mongodb.net/megastore` |
-| `JWT_SECRET` | ✅ | Secret for signing JWT tokens | `a_long_random_string` |
+| `JWT_SECRET` | ✅ | Random secret of at least 32 characters | Generate a unique value; do not use an example string |
 | `EMAIL_USER` | ✅ | Gmail address used to send OTPs | `you@gmail.com` |
 | `EMAIL_PASS` | ✅ | Gmail **App Password** (not your login password) | `abcd efgh ijkl mnop` |
-| `RAZORPAY_KEY_ID` | ⚪ | Razorpay key ID (payments only) | `rzp_test_xxxxxxxx` |
-| `RAZORPAY_KEY_SECRET` | ⚪ | Razorpay key secret (payments only) | `xxxxxxxxxxxxxxxx` |
-| `PORT` | ⚪ | Backend port (Render assigns automatically) | `5000` |
+| `PORT` | ⚪ | Backend port (Render assigns automatically) | `10000` |
 | `CLIENT_URL` | ✅ | Comma-separated frontend origins allowed by CORS | `http://localhost:5173` |
 
 > **Never commit `.env` to GitHub.** If a real secret was committed previously, rotate it; adding it to `.gitignore` does not erase it from Git history. Generate a Gmail App Password at Google Account → Security → 2-Step Verification → App passwords.
@@ -414,8 +416,9 @@ Base URL (production): `https://enterprise-ai-powered-smartgadget.onrender.com`
 - [ ] Seller-uploaded product photography pipeline (upload infra already in place)
 - [ ] Web-push notifications via service worker
 - [ ] Multi-language UI (Bengali / Hindi / English)
-- [ ] Connect seller/admin dashboards and order history to authenticated APIs
-- [ ] Add automated tests (React Testing Library and Supertest)
+- [x] Connect seller catalog and admin summary dashboards to authenticated APIs
+- [ ] Connect order history and cancellation/return workflows to authenticated APIs
+- [x] Add focused frontend and API tests (expand coverage for role journeys and deployment)
 
 ---
 
