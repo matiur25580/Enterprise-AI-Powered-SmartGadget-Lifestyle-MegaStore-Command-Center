@@ -1,65 +1,90 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useState,Component} from 'react';
 import {Link,useNavigate,useParams} from 'react-router-dom';
 import {useStore} from '../../context/StoreContext.jsx';
 import PincodeEMI from '../../components/PincodeEMI.jsx';
 import ProductGallery from '../../components/ProductGallery.jsx';
-import {formatPrice,getDiscount,getListPrice,ProductImage} from '../../components/ProductCard.jsx';
 const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
+const inr=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+const discOf=p=>{ const m=Number(p&&p.mrp||0), pr=Number(p&&p.price||0); return (m>pr&&m>0)?Math.round((1-pr/m)*100):0; };
+class Safe extends Component{
+  constructor(p){ super(p); this.state={bad:false}; }
+  static getDerivedStateFromError(){ return {bad:true}; }
+  render(){ return this.state.bad?null:this.props.children; }
+}
 export default function ProductDetailLive(){
-  const {id}=useParams();const navigate=useNavigate();const {addCart,toggleWish,wish}=useStore();
-  const [product,setProduct]=useState(null);const [matches,setMatches]=useState([]);const [loading,setLoading]=useState(true);const [error,setError]=useState('');
+  const {id}=useParams();
+  const navigate=useNavigate();
+  const store=useStore()||{};
+  const addCart=store.addCart||(()=>{});
+  const toggleWish=store.toggleWish||(()=>{});
+  const wish=Array.isArray(store.wish)?store.wish:[];
+  const [product,setProduct]=useState(null);
+  const [matches,setMatches]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState('');
   const [quantity,setQuantity]=useState(1);
   useEffect(()=>{
     let active=true;
-    async function load(){
-      setLoading(true);setError('');
+    (async()=>{
+      setLoading(true); setError('');
       try{
-        const response=await fetch(`${API}/api/product/${id}`);
-        const data=await response.json();
-        if(!response.ok||!data.success)throw new Error(data.message||'Product could not be found');
-        if(active)setProduct(data.product);
-        const matchResponse=await fetch(`${API}/api/product/combo/${id}`);
-        if(matchResponse.ok){const matchData=await matchResponse.json();if(active)setMatches(matchData.perfect||[])}
-      }catch(err){if(active)setError(err.message||'Product could not be loaded')}
-      finally{if(active)setLoading(false)}
-    }
-    load();return()=>{active=false};
+        const r=await fetch(API+'/api/product/'+id);
+        const d=await r.json().catch(()=>({}));
+        if(!r.ok||!d.success) throw new Error((d&&d.message)||'Product not found');
+        if(active) setProduct(d.product||null);
+        try{
+          const mr=await fetch(API+'/api/product/combo/'+id);
+          const md=await mr.json().catch(()=>({}));
+          if(active) setMatches(Array.isArray(md.matches)?md.matches:[]);
+        }catch(e){ if(active) setMatches([]); }
+      }catch(e){ if(active) setError(e.message||'Failed to load product'); }
+      if(active) setLoading(false);
+    })();
+    return ()=>{active=false;};
   },[id]);
-  if(loading)return <main className="product-detail-shell"><div className="product-detail-skeleton" role="status">Loading product details…</div></main>;
-  if(error||!product)return <main className="product-detail-shell"><p role="alert">{error||'Product not found'}</p><Link to="/shop">Back to shop</Link></main>;
-  const saved=wish.some(item=>item._id===product._id);
-  const discount=getDiscount(product);
-  const addSelectedQuantity=()=>addCart(product,quantity);
-  return(
-    <main className="product-detail-shell">
-      <Link to="/shop" className="product-back">Back to shop</Link>
-      <section className="product-detail-grid">
-        <div className="product-detail-image"><ProductGallery images={product.images||[]} highlights={product.highlights||[]} name={product.name} category={product.category}/><span className="product-discount-badge">-{discount}%</span><button type="button" className={`product-wishlist-button${saved?' is-saved':''}`} aria-label={saved?'Remove from wishlist':'Add to wishlist'} aria-pressed={saved} onClick={()=>toggleWish(product)}>{saved?'♥':'♡'}</button></div>
-        <div className="product-detail-copy">
-          <span className="catalog-category">{product.category}{product.subcategory?` / ${product.subcategory}`:''}</span>
-          <h1>{product.name}</h1>
-          <p className="product-brand">{product.brand||'MegaStore catalog'}</p>
-          <div className="product-detail-rating"><span>★ {Number(product.rating||4.5).toFixed(1)}</span> Customer rating</div>
-          <div className="product-detail-price-row"><p className="product-detail-price">{formatPrice(product.price)}</p><del>{formatPrice(getListPrice(product))}</del><span>{discount}% off</span></div>
-          <p className={Number(product.stock)<10?'catalog-stock catalog-out':'catalog-stock'}>{product.stock>0?(product.stock<10?`Only ${product.stock} left!`:'In Stock'):'Out of stock'}</p>
-          <dl className="product-spec-list"><div><dt>Brand</dt><dd>{product.brand||'MegaStore'}</dd></div><div><dt>Category</dt><dd>{product.subcategory||product.category}</dd></div><div><dt>Availability</dt><dd>{product.stock>0?'Ready to ship':'Currently unavailable'}</dd></div></dl>
-          {product.comboTags?.length>0&&<div className="product-tags"><h2>Shop by compatibility</h2><div>{product.comboTags.map(tag=><span key={tag}>{tag}</span>)}</div></div>}
-          <div className="product-quantity"><span>Quantity</span><div><button type="button" aria-label="Decrease quantity" disabled={quantity<=1} onClick={()=>setQuantity(value=>Math.max(1,value-1))}>−</button><output aria-live="polite">{quantity}</output><button type="button" aria-label="Increase quantity" disabled={quantity>=Number(product.stock)} onClick={()=>setQuantity(value=>Math.min(Number(product.stock),value+1))}>+</button></div></div>
-          <div className="product-detail-actions">
-            <button type="button" disabled={!product.stock} onClick={addSelectedQuantity}>Add to cart</button>
-            <button type="button" disabled={!product.stock} onClick={()=>{addSelectedQuantity();navigate('/checkout')}}>Buy now</button>
-            <button type="button" onClick={()=>toggleWish(product)}>{saved?'Remove from wishlist':'Add to wishlist'}</button>
-          </div>
-          <PincodeEMI price={product.price}/>
+  if(loading) return (<div style={{padding:40,textAlign:'center',fontFamily:'sans-serif'}}>Loading product…</div>);
+  if(error||!product) return (<div style={{padding:40,textAlign:'center',fontFamily:'sans-serif'}}><p>{error||'Product not found'}</p><Link to="/shop">← Back to shop</Link></div>);
+  const d=discOf(product);
+  const pid=product._id||product.id;
+  const saved=wish.find(x=>x&&(x._id===pid||x.id===pid));
+  return (
+  <div style={{maxWidth:1100,margin:'0 auto',padding:15,fontFamily:'sans-serif'}}>
+    <Link to="/shop">← Back</Link>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginTop:10}}>
+      <div style={{position:'relative'}}>
+        <Safe><ProductGallery images={product.images||[]} highlights={product.highlights||[]} name={product.name||''} category={product.category||''}/></Safe>
+        {d>0&&(<span style={{position:'absolute',top:10,left:10,background:'#388e3c',color:'#fff',padding:'4px 10px',borderRadius:12,fontSize:12,fontWeight:'bold',zIndex:2}}>-{d}%</span>)}
+        <button onClick={()=>toggleWish(product)} aria-label="wishlist" style={{position:'absolute',top:10,right:10,width:40,height:40,borderRadius:'50%',border:'none',background:'rgba(255,255,255,.92)',fontSize:18,cursor:'pointer',zIndex:2}}>{saved?'♥':'♡'}</button>
+      </div>
+      <div>
+        <h2 style={{margin:'0 0 8px'}}>{product.name||'Product'}</h2>
+        <div><span style={{background:'#388e3c',color:'#fff',padding:'2px 8px',borderRadius:4,fontSize:13}}>{product.rating||'4.0'} ★</span></div>
+        <div style={{margin:'10px 0'}}><b style={{fontSize:28}}>{inr(product.price)}</b>{(Number(product.mrp)>Number(product.price))&&(<span> <s style={{color:'#888'}}>{inr(product.mrp)}</s> <b style={{color:'#388e3c'}}>{d}% off</b></span>)}</div>
+        {product.description&&(<p style={{color:'#555',fontSize:14}}>{product.description}</p>)}
+        <Safe><PincodeEMI price={product.price}/></Safe>
+        <div style={{display:'flex',gap:10,alignItems:'center',margin:'12px 0'}}>
+          <span style={{fontSize:14}}>Qty:</span>
+          <button onClick={()=>setQuantity(q=>Math.max(1,q-1))} style={{width:32,height:32,borderRadius:6,border:'1px solid #ddd',cursor:'pointer'}}>-</button>
+          <b>{quantity}</b>
+          <button onClick={()=>setQuantity(q=>Math.min(10,q+1))} style={{width:32,height:32,borderRadius:6,border:'1px solid #ddd',cursor:'pointer'}}>+</button>
         </div>
-      </section>
-      {matches.length>0&&<section className="product-matches">
-        <h2>Frequently bought together</h2>
-        <div className="product-match-grid">{matches.map(match=><button type="button" className="product-match" key={match._id} onClick={()=>navigate(`/product/${match._id}`)}>
-          <ProductImage product={match} className="product-match-image"/>
-          <span>{match.name}</span><b>{formatPrice(match.price)}</b>
-        </button>)}</div>
-      </section>}
-    </main>
-  );
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>{for(let i=0;i<quantity;i++)addCart(product);}} style={{flex:1,padding:12,background:'#ff9f00',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold',cursor:'pointer'}}>🛒 ADD TO CART</button>
+          <button onClick={()=>{for(let i=0;i<quantity;i++)addCart(product);navigate('/checkout');}} style={{flex:1,padding:12,background:'#fb641b',color:'#fff',border:'none',borderRadius:8,fontWeight:'bold',cursor:'pointer'}}>⚡ BUY NOW</button>
+        </div>
+      </div>
+    </div>
+    {matches.length>0&&(
+      <div style={{marginTop:30}}>
+        <h3>Frequently bought together</h3>
+        <div style={{display:'flex',gap:12,overflowX:'auto',paddingBottom:8}}>
+          {matches.map((m,i)=>{ const mid=m&&(m._id||m.id||i); return (
+            <Link key={mid} to={'/product/'+(m._id||m.id)} style={{minWidth:150,textDecoration:'none',color:'inherit',border:'1px solid #eee',borderRadius:10,padding:10}}>
+              <div style={{fontSize:13,fontWeight:'bold',marginBottom:6}}>{(m&&m.name)||''}</div>
+              <div style={{color:'#388e3c',fontWeight:'bold'}}>{inr(m&&m.price)}</div>
+            </Link> );})}
+        </div>
+      </div>
+    )}
+  </div>);
 }
