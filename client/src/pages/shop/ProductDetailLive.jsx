@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {Link,useNavigate,useParams} from 'react-router-dom';
 import {useStore} from '../../context/StoreContext.jsx';
 import PincodeEMI from '../../components/PincodeEMI.jsx';
+import ProductGallery from '../../components/ProductGallery.jsx';
 import {formatPrice,getDiscount,getListPrice,ProductImage} from '../../components/ProductCard.jsx';
 const API=(import.meta.env.VITE_API_URL||'https://enterprise-ai-powered-smartgadget.onrender.com').replace(/\/$/,'');
 export default function ProductDetailLive(){
@@ -33,7 +34,7 @@ export default function ProductDetailLive(){
     <main className="product-detail-shell">
       <Link to="/shop" className="product-back">Back to shop</Link>
       <section className="product-detail-grid">
-        <div className="product-detail-image"><ProductImage product={product} className="product-detail-image-content" large/><span className="product-discount-badge">-{discount}%</span><button type="button" className={`product-wishlist-button${saved?' is-saved':''}`} aria-label={saved?'Remove from wishlist':'Add to wishlist'} aria-pressed={saved} onClick={()=>toggleWish(product)}>{saved?'♥':'♡'}</button></div>
+        <div className="product-detail-image"><ProductGallery images={product.images||[]} highlights={product.highlights||[]} name={product.name} category={product.category}/><span className="product-discount-badge">-{discount}%</span><button type="button" className={`product-wishlist-button${saved?' is-saved':''}`} aria-label={saved?'Remove from wishlist':'Add to wishlist'} aria-pressed={saved} onClick={()=>toggleWish(product)}>{saved?'♥':'♡'}</button></div>
         <div className="product-detail-copy">
           <span className="catalog-category">{product.category}{product.subcategory?` / ${product.subcategory}`:''}</span>
           <h1>{product.name}</h1>
