@@ -6,6 +6,7 @@ import Wishlist from './pages/shop/Wishlist.jsx';import Orders from './pages/sho
 import Terms from './pages/shop/Terms.jsx';import Settings from './pages/shop/Settings.jsx';
 import SellerDashboard from './pages/seller/SellerDashboard.jsx';import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import ProductDetail from './pages/shop/ProductDetailLive.jsx';
+import ProductDetailLive from './pages/shop/ProductDetailLive.jsx';
 import ApiDocs from './pages/shop/ApiDocs.jsx';
 import BulkUpload from './pages/seller/BulkUpload.jsx';
 import HRShowcase from './pages/hr/HRShowcase.jsx';
