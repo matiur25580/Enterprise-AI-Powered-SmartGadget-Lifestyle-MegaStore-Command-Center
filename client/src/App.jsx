@@ -47,7 +47,7 @@ export default function App(){return (<StoreProvider><BrowserRouter><Toaster pos
 <Route path="/wishlist" element={<Wishlist/>}/><Route path="/orders" element={<Orders/>}/><Route path="/addresses" element={<AddressBook/>}/>
 <Route path="/terms" element={<Terms/>}/><Route path="/settings" element={<Settings/>}/>
 <Route path="/seller" element={<SellerDashboard/>}/><Route path="/admin" element={<AdminDashboard/>}/>
-<Route path="/product/:id" element={<ProductDetail/>}/><Route path="/api-docs" element={<ApiDocs/>}/><Route path="/seller/bulk" element={<BulkUpload/>}/><Route path="/for-hr" element={<HRShowcase/>}/>
+<Route path="/product/:id" element={<ProductDetailLive/>}/><Route path="/api-docs" element={<ApiDocs/>}/><Route path="/seller/bulk" element={<BulkUpload/>}/><Route path="/for-hr" element={<HRShowcase/>}/>
 <Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/>
 </Routes></RouteErrorBoundary><SupportChat/></BrowserRouter></StoreProvider>);
 }
