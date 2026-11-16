@@ -402,9 +402,103 @@ Base URL (production): `https://enterprise-ai-powered-smartgadget.onrender.com`
 
 ---
 
-## 📸 Screenshots
+## 📸 Product Gallery
 
-> Add screenshots of the live site here — landing page, product detail with 3D view, seller dashboard, order tracking map, and the `/for-hr` showcase page.
+The catalog assets below are included in the repository and illustrate the range of product imagery used by the storefront. They are **catalog product images, not screenshots of the live application**. Images are displayed in one vertical column for easy reading on desktop and mobile.
+
+### 01 · Wireless audio — AirPods Pro
+
+<img src="client/public/products/airpods-pro-2nd-gen/2.jpg" alt="Wireless earbuds product image from the SmartGadget catalog" width="100%" />
+
+*Wireless audio imagery for the accessories catalog.*
+
+---
+
+### 02 · Travel accessories — American Tourister backpack
+
+<img src="client/public/products/american-tourister-32l-backpack/1.jpg" alt="American Tourister backpack product image" width="100%" />
+
+*Travel and everyday-carry products in the lifestyle range.*
+
+---
+
+### 03 · Camera accessories — Lens protector
+
+<img src="client/public/products/camera-lens-protector/2.jpg" alt="Camera lens protector product image" width="100%" />
+
+*Small accessories that complement mobile photography devices.*
+
+---
+
+### 04 · Storage accessories — HP USB drive
+
+<img src="client/public/products/hp-64gb-usb-pendrive/1.jpg" alt="HP USB flash drive product image" width="100%" />
+
+*Portable storage from the computer accessories catalog.*
+
+---
+
+### 05 · Smartphones — iPhone 15
+
+<img src="client/public/products/iphone-15-128gb-blue/1.jpg" alt="Blue iPhone 15 product image" width="100%" />
+
+*Smartphone product imagery for the main device catalog.*
+
+---
+
+### 06 · Mobile protection — Clear phone case
+
+<img src="client/public/products/iphone-15-clear-case/2.jpg" alt="Clear iPhone 15 protective case product image" width="100%" />
+
+*Protective accessories presented alongside compatible devices.*
+
+---
+
+### 07 · Laptop accessories — Protective sleeve
+
+<img src="client/public/products/laptop-sleeve-15-6-inch/1.jpg" alt="15.6-inch laptop sleeve product image" width="100%" />
+
+*Laptop carry and protection accessories.*
+
+---
+
+### 08 · Desk setup — Wireless charging lamp
+
+<img src="client/public/products/led-desk-lamp-with-wireless-charger/2.jpg" alt="LED desk lamp with wireless charger product image" width="100%" />
+
+*Desk and workspace accessories from the lifestyle range.*
+
+---
+
+### 09 · Power accessories — 20,000 mAh power bank
+
+<img src="client/public/products/mi-20000mah-power-bank-3i/1.jpg" alt="Mi 20,000 mAh power bank product image" width="100%" />
+
+*Portable charging products for everyday use.*
+
+---
+
+### 10 · Data storage — External hard drive
+
+<img src="client/public/products/wd-2tb-external-hard-disk/2.jpg" alt="WD 2 TB external hard drive product image" width="100%" />
+
+*External storage from the computing accessories catalog.*
+
+---
+
+### 11 · Wireless audio — alternate product view
+
+<img src="client/public/products/airpods-pro-2nd-gen/3.jpg" alt="Alternate product view of wireless earbuds" width="100%" />
+
+*An additional catalog angle for the wireless audio listing.*
+
+---
+
+### 12 · Smartphones — alternate iPhone view
+
+<img src="client/public/products/iphone-15-128gb-blue/2.jpg" alt="Alternate product view of the blue iPhone 15" width="100%" />
+
+*An additional product angle to demonstrate multi-image catalog support.*
 
 ---
 
