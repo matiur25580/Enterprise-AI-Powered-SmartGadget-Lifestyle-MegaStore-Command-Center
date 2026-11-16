@@ -59,8 +59,6 @@ The API uses JWT authentication, hashed short-lived OTPs, role checks for catalo
 | 🖥️ Backend API (Render) | `https://enterprise-ai-powered-smartgadget.onrender.com` |
 | 👨‍💻 HR Showcase Page | `https://enterprise-ai-powered-smart-gadget-neon.vercel.app/for-hr` |
 
-> ✏️ `https://enterprise-ai-powered-smart-gadget-neon.vercel.app` er jaygay tomar asol Vercel URL bosao (2 jaygay ache)
-
 Register a Customer or Seller account from the live site. Administrative and other staff roles require provisioning outside the public registration flow; only Admin and Seller dashboards are currently implemented.
 
 ---
