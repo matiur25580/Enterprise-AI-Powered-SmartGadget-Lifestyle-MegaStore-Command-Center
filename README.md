@@ -433,7 +433,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 👤 Author
 
-**Rubel Ali** — MERN Full-Stack Developer, Kolkata, India
+**Matiur Rahaman** — Full-Stack Developer, Kolkata, India
 
 - GitHub: [@matiur25580](https://github.com/matiur25580)
 - Email: `rahamanmatiur397@gmail.com`
