@@ -50,7 +50,7 @@ router.get('/my/:email',protect,allow('Customer'),async(req,res,next)=>{
   res.json({success:true,count:list.length,orders:list});}
   catch(e){next(e)}
 });
-router.put('/status/:id',protect,allow('Admin','DeliveryAgent'),body('status').isIn(['Pending','Shipped','Delivered','Cancelled']),validate,async(req,res,next)=>{
+router.put('/status/:id',protect,allow('Admin'),body('status').isIn(['Pending','Shipped','Delivered','Cancelled']),validate,async(req,res,next)=>{
   try{const o=await Order.findByIdAndUpdate(req.params.id,{status:req.body.status},{new:true});
   if(!o)return res.status(404).json({success:false,message:'Order not found'});
   res.json({success:true,message:'Order status updated successfully',order:o});}

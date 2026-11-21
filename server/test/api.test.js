@@ -210,6 +210,17 @@ describe('order API',()=>{
     expect(response.status).toBe(400);
     expect(Order.findByIdAndUpdate).not.toHaveBeenCalled();
   });
+  it('prevents delivery agents from changing any order status until assignment tracking exists',async()=>{
+    const response=await request(app).put(`/api/order/status/${productId}`).set('Authorization',`Bearer ${tokenFor('DeliveryAgent')}`).send({status:'Delivered'});
+    expect(response.status).toBe(403);
+    expect(Order.findByIdAndUpdate).not.toHaveBeenCalled();
+  });
+  it('allows administrators to update order status',async()=>{
+    Order.findByIdAndUpdate.mockResolvedValue({_id:productId,status:'Shipped'});
+    const response=await request(app).put(`/api/order/status/${productId}`).set('Authorization',`Bearer ${tokenFor('Admin')}`).send({status:'Shipped'});
+    expect(response.status).toBe(200);
+    expect(Order.findByIdAndUpdate).toHaveBeenCalledWith(productId,{status:'Shipped'},{new:true});
+  });
   it('places an order and decrements product inventory',async()=>{
     const product={_id:productId,name:'Phone',price:100};
     Product.findOneAndUpdate.mockResolvedValue(product);

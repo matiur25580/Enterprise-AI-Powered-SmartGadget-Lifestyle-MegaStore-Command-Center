@@ -390,7 +390,7 @@ module.exports = {
       }, { ...auth, parameters: [{ in: 'path', name: 'email', required: true, schema: { type: 'string', format: 'email' } }] }),
     },
     '/api/orders/status/{id}': {
-      put: operation('Orders', 'Update order status (Admin or DeliveryAgent)', {
+      put: operation('Orders', 'Update order status (Admin)', {
         200: { description: 'Order updated' },
         400: badRequest,
         401: unauthorized,

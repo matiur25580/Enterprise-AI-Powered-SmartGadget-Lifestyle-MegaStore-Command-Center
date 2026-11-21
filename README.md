@@ -352,7 +352,9 @@ Base URL (production): `https://enterprise-ai-powered-smartgadget.onrender.com`
 |---|---|---|---|
 | POST | `/api/order/create` | Place a COD order; server recalculates totals and reserves stock | Customer |
 | GET | `/api/order/my/:email` | Fetch authenticated customer's orders | Customer |
-| PUT | `/api/order/status/:id` | Update order status | Admin, DeliveryAgent |
+| PUT | `/api/order/status/:id` | Update order status | Admin |
+
+Delivery-agent status updates are intentionally disabled until the API supports explicit order-to-agent assignment and ownership checks.
 
 ### Uploads & Payments
 | Method | Endpoint | Description | Access |
