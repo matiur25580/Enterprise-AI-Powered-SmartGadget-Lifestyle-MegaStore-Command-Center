@@ -11,7 +11,7 @@ router.post('/add',protect,allow('Admin','Seller'),productRules,validate,async(r
 router.put('/:id',protect,allow('Admin','Seller'),productRules,validate,async(req,res,next)=>{
   try{
     const filter={_id:req.params.id};if(req.user.role!=='Admin')filter.sellerId=req.user.id;
-    const editableFields=['name','category','subcategory','price','stock','brand','comboTags','image','mrp','rating','highlights','specs','images'];
+    const editableFields=['name','category','subcategory','price','stock','brand','comboTags','image','mrp','highlights','specs','images'];
     const updates=Object.fromEntries(editableFields.filter(field=>Object.hasOwn(req.body,field)).map(field=>[field,req.body[field]]));
     const product=await Product.findOneAndUpdate(filter,updates,{new:true,runValidators:true});
     if(!product)return res.status(404).json({success:false,message:'Product not found'});
