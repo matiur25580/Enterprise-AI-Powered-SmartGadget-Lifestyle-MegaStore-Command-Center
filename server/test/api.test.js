@@ -175,6 +175,11 @@ describe('product API',()=>{
     expect(response.status).toBe(200);
     expect(Product.findOneAndUpdate.mock.calls[0][1]).not.toHaveProperty('sellerId');
   });
+  it('does not allow sellers or administrators to directly overwrite product ratings',async()=>{
+    const response=await request(app).put(`/api/products/${productId}`).set('Authorization',`Bearer ${tokenFor('Seller')}`).send({...productBody,rating:5});
+    expect(response.status).toBe(200);
+    expect(Product.findOneAndUpdate.mock.calls[0][1]).not.toHaveProperty('rating');
+  });
   it('rejects a product MRP below its selling price',async()=>{
     const response=await request(app).post('/api/product/add').set('Authorization',`Bearer ${tokenFor('Seller')}`).send({...productBody,price:200,mrp:100});
     expect(response.status).toBe(400);
