@@ -2,6 +2,7 @@ const express=require('express');const mongoose=require('mongoose');const Order=
 const Product=require('../models/Product');const {protect,allow}=require('../middleware/auth');
 const {validate,orderRules}=require('../middleware/validate');
 const {body}=require('express-validator');
+const {allowedPreviousStatuses}=require('../utils/orderStatusPolicy');
 const router=express.Router();
 router.post('/create',protect,allow('Customer'),orderRules,validate,async(req,res,next)=>{
   let session;
@@ -51,9 +52,16 @@ router.get('/my/:email',protect,allow('Customer'),async(req,res,next)=>{
   catch(e){next(e)}
 });
 router.put('/status/:id',protect,allow('Admin'),body('status').isIn(['Pending','Shipped','Delivered','Cancelled']),validate,async(req,res,next)=>{
-  try{const o=await Order.findByIdAndUpdate(req.params.id,{status:req.body.status},{new:true});
-  if(!o)return res.status(404).json({success:false,message:'Order not found'});
-  res.json({success:true,message:'Order status updated successfully',order:o});}
-  catch(e){next(e)}
+  try{
+    const previousStatuses=allowedPreviousStatuses(req.body.status);
+    if(!previousStatuses.length)return res.status(400).json({success:false,message:'Unsupported order status transition'});
+    const o=await Order.findOneAndUpdate(
+      {_id:req.params.id,status:{$in:previousStatuses}},
+      {$set:{status:req.body.status}},
+      {new:true,runValidators:true},
+    );
+    if(!o)return res.status(409).json({success:false,message:'Order not found or status transition is no longer valid'});
+    res.json({success:true,message:'Order status updated successfully',order:o});
+  }catch(e){next(e)}
 });
 module.exports=router;
