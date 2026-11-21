@@ -7,7 +7,7 @@ jest.mock('../src/models/Product', () => ({
   countDocuments: jest.fn(), find: jest.fn(), findById: jest.fn(), create: jest.fn(),
   findOneAndUpdate: jest.fn(), findOneAndDelete: jest.fn(), insertMany: jest.fn(),
 }));
-jest.mock('../src/models/Order', () => ({ find: jest.fn(), countDocuments: jest.fn(), create: jest.fn(), findByIdAndUpdate: jest.fn(), aggregate: jest.fn() }));
+jest.mock('../src/models/Order', () => ({ find: jest.fn(), countDocuments: jest.fn(), create: jest.fn(), findByIdAndUpdate: jest.fn(), findOneAndUpdate: jest.fn(), aggregate: jest.fn() }));
 jest.mock('../src/models/Coupon', () => ({ findOne: jest.fn() }));
 jest.mock('../src/utils/sendEmail', () => jest.fn().mockResolvedValue(undefined));
 
@@ -48,6 +48,7 @@ beforeEach(()=>{
   Order.find.mockReturnValue(makeQuery([]));
   Order.countDocuments.mockResolvedValue(0);
   Order.aggregate.mockResolvedValue([]);
+  Order.findOneAndUpdate.mockResolvedValue({_id:productId,status:'Shipped'});
   Coupon.findOne.mockResolvedValue(null);
 });
 
@@ -209,6 +210,7 @@ describe('order API',()=>{
     const response=await request(app).put(`/api/order/status/${productId}`).set('Authorization',`Bearer ${tokenFor('Admin')}`).send({status:'Refunded'});
     expect(response.status).toBe(400);
     expect(Order.findByIdAndUpdate).not.toHaveBeenCalled();
+    expect(Order.findOneAndUpdate).not.toHaveBeenCalled();
   });
   it('prevents delivery agents from changing any order status until assignment tracking exists',async()=>{
     const response=await request(app).put(`/api/order/status/${productId}`).set('Authorization',`Bearer ${tokenFor('DeliveryAgent')}`).send({status:'Delivered'});
@@ -216,10 +218,25 @@ describe('order API',()=>{
     expect(Order.findByIdAndUpdate).not.toHaveBeenCalled();
   });
   it('allows administrators to update order status',async()=>{
-    Order.findByIdAndUpdate.mockResolvedValue({_id:productId,status:'Shipped'});
+    Order.findOneAndUpdate.mockResolvedValue({_id:productId,status:'Shipped'});
     const response=await request(app).put(`/api/order/status/${productId}`).set('Authorization',`Bearer ${tokenFor('Admin')}`).send({status:'Shipped'});
     expect(response.status).toBe(200);
-    expect(Order.findByIdAndUpdate).toHaveBeenCalledWith(productId,{status:'Shipped'},{new:true});
+    expect(Order.findOneAndUpdate).toHaveBeenCalledWith(
+      {_id:productId,status:{$in:['Pending']}},
+      {$set:{status:'Shipped'}},
+      {new:true,runValidators:true},
+    );
+  });
+
+  it('rejects stale or terminal order status transitions atomically',async()=>{
+    Order.findOneAndUpdate.mockResolvedValue(null);
+    const response=await request(app).put(`/api/order/status/${productId}`).set('Authorization',`Bearer ${tokenFor('Admin')}`).send({status:'Delivered'});
+    expect(response.status).toBe(409);
+    expect(Order.findOneAndUpdate).toHaveBeenCalledWith(
+      {_id:productId,status:{$in:['Shipped']}},
+      {$set:{status:'Delivered'}},
+      {new:true,runValidators:true},
+    );
   });
   it('places an order and decrements product inventory',async()=>{
     const product={_id:productId,name:'Phone',price:100};
