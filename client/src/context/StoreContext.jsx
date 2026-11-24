@@ -22,6 +22,7 @@ function persistArray(key,value){
     toast.error('Your browser could not save this update.');
   }
 }
+// Centralizes cart, wishlist, local order history, and address state for the storefront.
 export function StoreProvider({children}){
   const [cart,setCart]=useState(()=>readStoredArray('ms_cart'));
   const [wish,setWish]=useState(()=>readStoredArray('ms_wish'));
