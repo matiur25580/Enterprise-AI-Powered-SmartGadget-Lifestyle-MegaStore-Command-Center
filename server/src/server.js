@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+// Load the configured Express application only after environment settings are available.
 const app = require('./app');
 
 const port = process.env.PORT || 10000;
