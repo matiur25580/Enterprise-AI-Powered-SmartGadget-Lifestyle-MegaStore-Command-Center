@@ -4,6 +4,7 @@ const {validate,orderRules}=require('../middleware/validate');
 const {body}=require('express-validator');
 const {allowedPreviousStatuses}=require('../utils/orderStatusPolicy');
 const router=express.Router();
+// Checkout reserves stock and creates the order in one MongoDB transaction to avoid partial purchases.
 router.post('/create',protect,allow('Customer'),orderRules,validate,async(req,res,next)=>{
   let session;
   try{
