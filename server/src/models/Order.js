@@ -1,4 +1,5 @@
 const mongoose=require('mongoose');
+// Persists the customer, price snapshot, delivery address, and fulfillment status for each order.
 const orderSchema=new mongoose.Schema({
   customerId:{type:mongoose.Schema.Types.ObjectId,ref:'User',required:true},
   customerEmail:String,
