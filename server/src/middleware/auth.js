@@ -1,4 +1,5 @@
 const jwt=require('jsonwebtoken');
+// Verifies the request's JWT and attaches its claims before protected commerce routes execute.
 exports.protect=(req,res,next)=>{
   try{
     const h=req.headers.authorization;
