@@ -1,3 +1,4 @@
+// Prefer the deployment-specific API URL; fall back to local development or the hosted API.
 const configuredApiUrl = import.meta.env.VITE_API_URL;
 const defaultApiUrl = import.meta.env.DEV
   ? 'http://localhost:10000'
